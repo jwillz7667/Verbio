@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRealtimeTranslation } from '@/hooks/useRealtimeTranslation';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { useRealtimeVoiceRealtime } from '@/hooks/useRealtimeVoiceRealtime';
 import { ModernConversationDisplay } from '@/components/ModernConversationDisplay';
 import { LanguageSelector } from '@/components/LanguageSelector';
 // removed ConnectionStatus import (now used inside Header)
@@ -11,7 +12,7 @@ import { Switch } from '@/components/ui/Switch';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { VoiceVisualizer } from '@/components/VoiceVisualizer';
 import { toast } from 'sonner';
-import { Mic, MicOff, Loader2, Square, Play, Send } from 'lucide-react';
+import { Mic, MicOff, Loader2, Square, Play, Send, ArrowLeftRight } from 'lucide-react';
 
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
@@ -24,6 +25,7 @@ export default function Home() {
   const [conversationActive, setConversationActive] = useState(false); // Track if conversation is active
   const autoRecordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [voicePreference, setVoicePreference] = useState<'auto' | 'male' | 'female'>('auto');
+  const [lowLatencyMode, setLowLatencyMode] = useState(false);
   const [lastVoiceUsed, setLastVoiceUsed] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Array<{
     id: string;
@@ -100,6 +102,11 @@ export default function Home() {
     audioLevel,
     isSupported
   } = useAudioRecorder({
+    maxDurationMs: 60_000,
+    onMaxDurationReached: () => {
+      setIsRecording(false);
+      toast.info('Recording stopped (60s time limit)');
+    },
     onAudioData: (audioData) => {
       // Don't send chunks during recording, wait for complete audio
       console.log('Receiving audio chunk, size:', audioData.length);
@@ -145,6 +152,11 @@ export default function Home() {
     }
   });
 
+  // Low-latency realtime voice (WebRTC)
+  const { connect: connectRealtime, disconnect: _disconnectRealtime, isConnected: isRealtimeConnected, isConnecting: isRealtimeConnecting } = useRealtimeVoiceRealtime({
+    onError: (e) => toast.error(e.message),
+  });
+
   // Initialize connection on mount
   useEffect(() => {
     // Connection is handled automatically in the hook
@@ -183,11 +195,21 @@ export default function Home() {
       await stopRecording();
       setIsRecording(false);
     } else {
-      const success = await startRecording();
-      if (success) {
+      if (lowLatencyMode) {
+        if (!isRealtimeConnected && !isRealtimeConnecting) {
+          await connectRealtime();
+        }
+        // WebRTC path streams immediately; visualizer uses mic already
         setIsRecording(true);
         setRecordingStartTime(Date.now());
-        toast.success(`Recording in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}`);
+        toast.success('Realtime listening…');
+      } else {
+        const success = await startRecording();
+        if (success) {
+          setIsRecording(true);
+          setRecordingStartTime(Date.now());
+          toast.success(`Recording in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}`);
+        }
       }
     }
   };
@@ -323,6 +345,11 @@ export default function Home() {
                   label="Auto-continue"
                 />
               )}
+              <Switch
+                checked={lowLatencyMode}
+                onCheckedChange={(v) => setLowLatencyMode(!!v)}
+                label="Low-latency (Realtime)"
+              />
             </div>
 
             <div className="flex items-center gap-3">
@@ -353,46 +380,69 @@ export default function Home() {
           </div>
         )}
 
-        {/* Text Input Translation */}
+        {/* Unified language + input composer */}
         <div className="mb-8">
-          <div className="glass-panel rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-white/80">
-                Enter text to translate
-              </label>
-              <span className="text-xs text-white/50">
-                {textInput.length}/1000
-              </span>
-            </div>
-            <textarea
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value.slice(0, 1000))}
-              rows={3}
-              maxLength={1000}
-              placeholder={`Type in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}…`}
-              className="w-full resize-y rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 placeholder:text-white/40 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
-            />
-            <div className="mt-3 flex items-center justify-end gap-2">
+          <div className="glass-panel rounded-2xl p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-white/60">From</label>
+                <select
+                  value={sourceLanguage}
+                  onChange={(e) => setSourceLanguage(e.target.value as 'en' | 'es')}
+                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/90 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
+                >
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                </select>
+              </div>
               <button
                 type="button"
-                onClick={() => setTextInput("")}
-                disabled={!textInput}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={swapLanguages}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition-colors hover:bg-white/10"
+                aria-label="Swap languages"
               >
-                Clear
+                <ArrowLeftRight className="h-4 w-4" />
               </button>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-white/60">To</label>
+                <select
+                  value={targetLanguage}
+                  onChange={(e) => setTargetLanguage(e.target.value as 'en' | 'es')}
+                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/90 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
+                >
+                  <option value="es">Spanish</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div className="ml-auto text-xs text-white/50">{textInput.length}/1000</div>
+            </div>
+            <div className="mt-3 flex items-end gap-2">
+              <textarea
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value.slice(0, 1000))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleTextTranslate();
+                  }
+                }}
+                rows={2}
+                maxLength={1000}
+                placeholder={`Type in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}… (Press Enter to send)`}
+                className="flex-1 resize-none rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 placeholder:text-white/40 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
+              />
               <button
                 type="button"
                 onClick={handleTextTranslate}
                 disabled={!textInput.trim() || isTextTranslating}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 px-3 py-2 text-sm font-medium text-white shadow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 px-4 text-sm font-medium text-white shadow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isTextTranslating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
-                Translate
+                Send
               </button>
             </div>
           </div>

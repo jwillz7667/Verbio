@@ -5,13 +5,17 @@ interface UseAudioRecorderProps {
   onRecordingComplete?: (audioBlob: Blob) => void;
   sampleRate?: number;
   chunkSize?: number;
+  maxDurationMs?: number;
+  onMaxDurationReached?: () => void;
 }
 
 export function useAudioRecorder({
   onAudioData,
   onRecordingComplete,
   sampleRate = 24000, // OpenAI Realtime API expects 24kHz
-  chunkSize = 4096
+  chunkSize = 4096,
+  maxDurationMs,
+  onMaxDurationReached,
 }: UseAudioRecorderProps = {}) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -25,6 +29,7 @@ export function useAudioRecorder({
   const audioChunksRef = useRef<Uint8Array[]>([]);
   const animationFrameRef = useRef<number>();
   const isRecordingRef = useRef(false);
+  const maxDurationTimeoutRef = useRef<number | undefined>(undefined);
 
   // Check browser support
   useEffect(() => {
@@ -160,6 +165,23 @@ export function useAudioRecorder({
       setIsRecording(true);
       isRecordingRef.current = true;
       
+      // Enforce maximum recording duration if provided
+      if (maxDurationMs && maxDurationMs > 0) {
+        if (maxDurationTimeoutRef.current) {
+          clearTimeout(maxDurationTimeoutRef.current);
+        }
+        maxDurationTimeoutRef.current = window.setTimeout(async () => {
+          if (isRecordingRef.current) {
+            try {
+              await stopRecording();
+              onMaxDurationReached?.();
+            } catch (e) {
+              // no-op
+            }
+          }
+        }, maxDurationMs);
+      }
+
       // Start monitoring audio levels
       monitorAudioLevel();
       
@@ -175,6 +197,10 @@ export function useAudioRecorder({
   const stopRecording = useCallback(async (): Promise<Blob> => {
     setIsRecording(false);
     isRecordingRef.current = false;
+    if (maxDurationTimeoutRef.current) {
+      clearTimeout(maxDurationTimeoutRef.current);
+      maxDurationTimeoutRef.current = undefined;
+    }
     
     // Stop monitoring audio levels
     if (animationFrameRef.current) {
@@ -245,6 +271,9 @@ export function useAudioRecorder({
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (maxDurationTimeoutRef.current) {
+        clearTimeout(maxDurationTimeoutRef.current);
       }
       
       if (mediaStreamRef.current) {
