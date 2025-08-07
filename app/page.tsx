@@ -5,10 +5,13 @@ import { useRealtimeTranslation } from '@/hooks/useRealtimeTranslation';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { ModernConversationDisplay } from '@/components/ModernConversationDisplay';
 import { LanguageSelector } from '@/components/LanguageSelector';
-import { ConnectionStatus } from '@/components/ConnectionStatus';
+// removed ConnectionStatus import (now used inside Header)
+import { Header } from '@/components/Header';
+import { Switch } from '@/components/ui/Switch';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { VoiceVisualizer } from '@/components/VoiceVisualizer';
 import { toast } from 'sonner';
-import { Mic, MicOff, Volume2, Loader2, Square, Play } from 'lucide-react';
+import { Mic, MicOff, Loader2, Square, Play } from 'lucide-react';
 
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
@@ -237,24 +240,7 @@ export default function Home() {
         <div className="blob absolute top-1/2 left-1/2 w-[700px] h-[700px] opacity-10" style={{ animationDelay: '5s' }} />
       </div>
 
-      {/* Header */}
-      <header className="glass-panel sticky top-0 z-50 border-b border-white/10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 gradient-border-animated rounded-xl flex items-center justify-center floating">
-                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Volume2 className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold glow-text">
-                Verbio
-              </h1>
-            </div>
-            <ConnectionStatus status={connectionStatus} />
-          </div>
-        </div>
-      </header>
+      <Header status={connectionStatus} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -262,67 +248,31 @@ export default function Home() {
         <div className="mb-6 flex justify-center">
           <div className="glass-panel rounded-2xl p-4 flex flex-col gap-4">
             <div className="flex items-center gap-6">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={conversationMode}
-                  onChange={(e) => setConversationMode(e.target.checked)}
-                  className="w-5 h-5 text-purple-500 rounded-lg focus:ring-purple-400 focus:ring-2 bg-transparent border-white/30"
-                />
-                <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors">
-                  Conversation Mode (Auto-detect)
-                </span>
-              </label>
+              <Switch
+                checked={conversationMode}
+                onCheckedChange={setConversationMode}
+                label="Conversation Mode (Auto-detect)"
+              />
               {conversationMode && (
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={autoRecord}
-                    onChange={(e) => setAutoRecord(e.target.checked)}
-                    className="w-5 h-5 text-purple-500 rounded-lg focus:ring-purple-400 focus:ring-2 bg-transparent border-white/30"
-                  />
-                  <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors">
-                    Auto-continue
-                  </span>
-                </label>
+                <Switch
+                  checked={autoRecord}
+                  onCheckedChange={setAutoRecord}
+                  label="Auto-continue"
+                />
               )}
             </div>
-            
-            {/* Voice Preference Selector */}
+
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-white/70">Voice Output:</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setVoicePreference('auto')}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                    voicePreference === 'auto' 
-                      ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50' 
-                      : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  Auto
-                </button>
-                <button
-                  onClick={() => setVoicePreference('male')}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                    voicePreference === 'male' 
-                      ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50' 
-                      : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  👨 Male
-                </button>
-                <button
-                  onClick={() => setVoicePreference('female')}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                    voicePreference === 'female' 
-                      ? 'bg-pink-500/30 text-pink-300 border border-pink-400/50' 
-                      : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  👩 Female
-                </button>
-              </div>
+              <SegmentedControl
+                value={voicePreference}
+                onChange={(v) => setVoicePreference(v as any)}
+                options={[
+                  { value: 'auto', label: 'Auto' },
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                ]}
+              />
             </div>
           </div>
         </div>

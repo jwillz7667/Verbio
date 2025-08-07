@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { APP_CONFIG } from '@/lib/constants';
-import type { HealthCheckResponse } from '@/types/index';
+import type { HealthCheckResponse } from '@/types';
 
 const startTime = Date.now();
 

@@ -29,6 +29,7 @@
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./hooks/*"],
       "@/utils/*": ["./utils/*"],
+      "@/types": ["./types/index.d.ts"],
       "@/types/*": ["./types/*"],
       "@/styles/*": ["./styles/*"],
       "@/public/*": ["./public/*"]

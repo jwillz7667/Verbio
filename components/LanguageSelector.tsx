@@ -1,5 +1,8 @@
 // components/LanguageSelector.tsx
+"use client";
+
 import { ArrowLeftRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 
 interface LanguageSelectorProps {
   sourceLanguage: 'en' | 'es';
@@ -17,42 +20,40 @@ export function LanguageSelector({
   onSwap
 }: LanguageSelectorProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="glass-panel rounded-2xl p-6">
+      <div className="flex items-end justify-between gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            From
-          </label>
-          <select
-            value={sourceLanguage}
-            onChange={(e) => onSourceChange(e.target.value as 'en' | 'es')}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-          >
-            <option value="en">🇬🇧 English</option>
-            <option value="es">🇪🇸 Spanish</option>
-          </select>
+          <label className="mb-2 block text-sm font-medium text-white/70">From</label>
+          <Select value={sourceLanguage} onValueChange={(v) => onSourceChange(v as 'en' | 'es')}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">🇬🇧 English</SelectItem>
+              <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
+
         <button
           onClick={onSwap}
-          className="mt-6 p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-all hover:rotate-180 duration-300"
+          className="mb-1 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition-all hover:rotate-180 hover:bg-white/10"
           aria-label="Swap languages"
         >
-          <ArrowLeftRight className="w-5 h-5" />
+          <ArrowLeftRight className="h-5 w-5" />
         </button>
-        
+
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            To
-          </label>
-          <select
-            value={targetLanguage}
-            onChange={(e) => onTargetChange(e.target.value as 'en' | 'es')}
-            className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-          >
-            <option value="es">🇪🇸 Spanish</option>
-            <option value="en">🇬🇧 English</option>
-          </select>
+          <label className="mb-2 block text-sm font-medium text-white/70">To</label>
+          <Select value={targetLanguage} onValueChange={(v) => onTargetChange(v as 'en' | 'es')}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select target" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+              <SelectItem value="en">🇬🇧 English</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
