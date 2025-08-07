@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { APP_CONFIG } from '@/lib/constants';
+import { Footer } from '@/components/Footer';
 import './globals.css';
 
 const inter = Inter({ 
@@ -180,6 +181,7 @@ export default function RootLayout({
         >
           <QueryProvider>
             {children}
+            <Footer />
             <Toaster 
               position="top-center"
               toastOptions={{

@@ -74,8 +74,6 @@ export function useRealtimeTranslation({
   const connect = useCallback(async (_apiKey: string, sourceLanguage: 'en' | 'es', targetLanguage: 'en' | 'es') => {
     sessionConfigRef.current = { sourceLanguage, targetLanguage };
     setConnectionStatus('connecting');
-    
-    // Check connection status
     await checkConnection();
   }, [checkConnection]);
 
