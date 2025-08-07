@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Github } from "lucide-react";
 import { ConnectionStatus } from "@/components/ConnectionStatus";
+import { UserMenu } from "@/components/UserMenu";
 
 export function Header({
   status,
@@ -27,6 +28,7 @@ export function Header({
         <div className="flex items-center gap-3">
           <ConnectionStatus status={status} />
           <ThemeToggle />
+          <UserMenu />
           <a
             href="https://github.com/jwillz7667/Verbio"
             target="_blank"
