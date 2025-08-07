@@ -124,7 +124,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.openai.com" />
         <link rel="canonical" href={APP_CONFIG.url} />
         <meta name="theme-color" content="#0f172a" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta property="og:locale" content="en_US" />
         <script

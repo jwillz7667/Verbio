@@ -1,5 +1,4 @@
 import type { MetadataRoute } from 'next';
-import { APP_CONFIG } from '@/lib/constants';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -11,14 +10,16 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#ffffff',
     theme_color: '#1a4363',
     icons: [
-      { src: '/icon.png', sizes: '64x64', type: 'image/png' },
-      { src: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
-      { src: '/apple-icon-dark.png', sizes: '180x180', type: 'image/png', purpose: 'maskable' },
+      // Next.js app/icon.tsx and app/apple-icon.tsx emit at /icon and /apple-icon (no .png extension)
+      { src: '/icon', sizes: '64x64', type: 'image/png' },
+      { src: '/apple-icon', sizes: '180x180', type: 'image/png' },
+      { src: '/apple-icon-dark', sizes: '180x180', type: 'image/png', purpose: 'maskable' },
     ],
     categories: ['utilities', 'productivity'],
     lang: 'en',
     scope: '/',
-    id: APP_CONFIG.url,
+    // Use relative id to avoid cross-origin warnings between apex and www subdomain
+    id: '/',
   };
 }
 
