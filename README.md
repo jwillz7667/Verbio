@@ -1,324 +1,224 @@
 # Verbio - Real-time Voice Translation Platform
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/verbio/verbio-app&env=OPENAI_API_KEY&project-name=verbio&repository-name=verbio-app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-14.1-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+<div align="center">
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
+  [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?style=for-the-badge&logo=openai)](https://openai.com)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+  
+  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jwillz7667/Verbio&env=OPENAI_API_KEY&envDescription=OpenAI%20API%20Key%20with%20access%20to%20Whisper%2C%20GPT-4%2C%20and%20TTS&project-name=verbio&repository-name=verbio)
 
-🌐 **Live at [verbio.app](https://verbio.app)**
+  **Break language barriers with real-time AI-powered voice translation**
+  
+  [Live Demo](https://verbio.vercel.app) • [Report Bug](https://github.com/jwillz7667/Verbio/issues) • [Request Feature](https://github.com/jwillz7667/Verbio/issues)
 
-Verbio is a cutting-edge real-time voice translation application that leverages OpenAI's Realtime API to provide instant, high-quality translation between English and Spanish with natural voice output.
+</div>
 
-## 🚀 Key Features
+## ✨ Features
 
-- **Real-time Voice Translation**: Instant translation as you speak using OpenAI's Realtime API
-- **Bidirectional Support**: Seamless English ↔ Spanish translation
-- **Natural Voice Output**: High-quality synthesized speech in target language
-- **WebSocket Streaming**: Ultra-low latency audio streaming
-- **Server-side Processing**: Secure API key handling
-- **Responsive Design**: Works perfectly on desktop and mobile
-- **Dark Mode**: Automatic theme switching based on system preferences
-- **Conversation History**: Track and replay translations
-- **Visual Feedback**: Real-time audio visualization and status indicators
+- 🎙️ **Real-time Voice Translation** - Instant translation between English and Spanish
+- 🤖 **Automatic Language Detection** - AI-powered language recognition
+- 🔊 **Natural Voice Synthesis** - Multiple voice options (male/female/neutral)
+- 💬 **Conversation Mode** - Continuous translation for natural dialogue
+- 🎨 **Modern Glassmorphism UI** - Beautiful animations and neon effects
+- ⚡ **Lightning Fast** - Optimized for speed with Next.js 14
+- 🔒 **Secure** - API keys stored server-side, protected routes
+- 📱 **Responsive** - Works on desktop and mobile devices
 
-## 🛠️ Technology Stack
+## 🚀 Quick Start
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **AI/ML**: OpenAI Realtime API (GPT-4o)
-- **Audio**: Web Audio API, PCM16 format
-- **WebSocket**: Native WebSocket + Server-Sent Events
-- **Deployment**: Vercel Edge Network
-- **Database**: Vercel KV (Redis)
-- **Analytics**: Vercel Analytics & Speed Insights
-- **Monitoring**: Sentry
-- **Testing**: Jest, Playwright
+### Prerequisites
 
-## 📋 Prerequisites
+- Node.js 18+ and npm
+- OpenAI API key with access to:
+  - Whisper API (speech-to-text)
+  - GPT-4 (translation)
+  - Text-to-Speech API
 
-- Node.js 18.17.0 or higher
-- npm 10.0.0 or higher
-- OpenAI API key with Realtime API access
-- Vercel account (for deployment)
+### Installation
 
-## 🔧 Installation
-
-### 1. Clone the repository
-
+1. **Clone the repository:**
 ```bash
-git clone https://github.com/verbio/verbio-app.git
-cd verbio-app
+git clone https://github.com/jwillz7667/Verbio.git
+cd Verbio
 ```
 
-### 2. Install dependencies
-
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-### 3. Set up environment variables
-
+3. **Set up environment variables:**
 ```bash
-cp .env.local.example .env.local
+# Create .env.local file
+echo "OPENAI_API_KEY=your_api_key_here" > .env.local
 ```
 
-Edit `.env.local` and add your OpenAI API key:
-
-```env
-OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxx
-```
-
-### 4. Run development server
-
+4. **Run the development server:**
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. **Open [http://localhost:3000](http://localhost:3000)**
 
-## 🚀 Deployment
+## 🎯 Usage
 
-### Deploy to Vercel (Recommended)
-
-1. Click the deploy button above or run:
-
-```bash
-npm install -g vercel
-vercel
-```
-
-2. Follow the prompts to:
-   - Link to your Vercel account
-   - Configure project settings
-   - Set environment variables
-
-3. Configure custom domain (verbio.app):
-
-```bash
-vercel domains add verbio.app
-```
-
-### Environment Variables for Production
-
-Set these in Vercel Dashboard → Settings → Environment Variables:
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | OpenAI API key with Realtime access | ✅ |
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `KV_URL` | Vercel KV Redis URL | ✅ |
-| `NEXTAUTH_SECRET` | Random secret for auth | ⚠️ |
-| `SENTRY_DSN` | Sentry error tracking | ⚠️ |
-
-## 🏗️ Project Structure
-
-```
-verbio-app/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── realtime/     # OpenAI Realtime WebSocket handler
-│   │   └── translate/    # REST translation endpoint
-│   ├── layout.tsx        # Root layout
-│   └── page.tsx          # Main translation interface
-├── components/            # React components
-│   ├── TranslationControls.tsx
-│   ├── ConversationDisplay.tsx
-│   ├── LanguageSelector.tsx
-│   └── VoiceVisualizer.tsx
-├── hooks/                # Custom React hooks
-│   ├── useRealtimeTranslation.ts  # OpenAI Realtime API integration
-│   └── useAudioRecorder.ts        # Microphone recording
-├── lib/                  # Utility libraries
-│   ├── openai.ts        # OpenAI client configuration
-│   └── audio.ts         # Audio processing utilities
-├── public/              # Static assets
-├── styles/              # Global styles
-├── types/               # TypeScript type definitions
-├── .env.local.example   # Environment variables template
-├── next.config.js       # Next.js configuration
-├── tsconfig.json        # TypeScript configuration
-├── vercel.json          # Vercel deployment settings
-└── package.json         # Dependencies and scripts
-```
-
-## 🔊 How It Works
-
-### Architecture Overview
-
-```mermaid
-graph LR
-    A[User Browser] -->|Audio Stream| B[Next.js API]
-    B -->|WebSocket| C[OpenAI Realtime API]
-    C -->|Translation| B
-    B -->|Audio Output| A
-    B -->|Session| D[Vercel KV]
-```
-
-### Audio Flow
-
-1. **Capture**: Browser captures audio at 24kHz using Web Audio API
-2. **Encode**: Convert Float32 to PCM16 format (OpenAI requirement)
-3. **Stream**: Send audio chunks via WebSocket to server
-4. **Process**: Server forwards to OpenAI Realtime API
-5. **Translate**: OpenAI processes and returns translation
-6. **Output**: Synthesized speech sent back to browser
-7. **Playback**: Browser plays translated audio
-
-### Key Components
-
-#### `useRealtimeTranslation` Hook
-- Manages WebSocket connection to OpenAI
-- Handles audio streaming and buffering
-- Processes translation responses
-- Manages connection state and errors
-
-#### `useAudioRecorder` Hook
-- Captures microphone input
-- Converts audio format (Float32 → PCM16)
-- Monitors audio levels for visualization
-- Handles browser permissions
-
-## 📱 Usage
-
-### Basic Translation Flow
-
-1. **Grant Permissions**: Allow microphone access when prompted
-2. **Select Languages**: Choose source and target languages
-3. **Start Recording**: Click the microphone button or press Space
-4. **Speak Clearly**: Talk naturally in the source language
-5. **Stop Recording**: Click again to stop and process
-6. **Listen**: Hear the translation in the target language
+1. **Grant microphone permission** when prompted
+2. **Choose your voice preference** (Auto/Male/Female)
+3. **Enable conversation mode** for continuous translation
+4. **Press the microphone button** or hit `Space` to start
+5. **Speak naturally** in English or Spanish
+6. **Listen to the translation** with natural voice output
 
 ### Keyboard Shortcuts
 
-- `Space`: Toggle recording
-- `S`: Swap languages
-- `C`: Clear conversation
-- `Escape`: Cancel recording
+- `Space` - Toggle recording
+- `S` - Swap languages (manual mode)
+- `C` - Clear conversation
+- `Escape` - Cancel recording
 
-## 🧪 Testing
+## 🛠️ Tech Stack
 
-### Run all tests
+<table>
+<tr>
+<td>
 
-```bash
-npm test
+**Frontend**
+- Next.js 14 (App Router)
+- React 18
+- TypeScript 5
+- Tailwind CSS 3.4
+- Framer Motion
+
+</td>
+<td>
+
+**AI/ML**
+- OpenAI Whisper
+- GPT-4 Turbo
+- OpenAI TTS
+- Web Audio API
+- Real-time streaming
+
+</td>
+<td>
+
+**Infrastructure**
+- Vercel Edge Functions
+- Vercel KV (Redis)
+- PostgreSQL (optional)
+- GitHub Actions
+- Sentry monitoring
+
+</td>
+</tr>
+</table>
+
+## 📦 Project Structure
+
+```
+verbio/
+├── app/                    # Next.js 14 app directory
+│   ├── api/               # API routes
+│   │   ├── realtime/      # Translation endpoint
+│   │   └── health/        # Health check
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page
+├── components/            # React components
+│   ├── ModernConversationDisplay.tsx
+│   ├── VoiceVisualizer.tsx
+│   └── LanguageSelector.tsx
+├── hooks/                 # Custom React hooks
+│   ├── useRealtimeTranslation.ts
+│   └── useAudioRecorder.ts
+├── lib/                   # Utility functions
+└── public/               # Static assets
 ```
 
-### Unit tests
+## 🚢 Deployment
+
+### Deploy to Vercel (Recommended)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jwillz7667/Verbio&env=OPENAI_API_KEY&envDescription=OpenAI%20API%20Key%20with%20access%20to%20Whisper%2C%20GPT-4%2C%20and%20TTS&project-name=verbio&repository-name=verbio)
+
+### Manual Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+## 🧪 Development
 
 ```bash
-npm run test:unit
-```
+# Development server
+npm run dev
 
-### E2E tests
-
-```bash
-npm run test:e2e
-```
-
-### Type checking
-
-```bash
+# Type checking
 npm run type-check
+
+# Linting
+npm run lint
+
+# Testing
+npm test
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
 
-## 📊 Performance
+## 🔧 Configuration
 
-### Metrics
+### Environment Variables
 
-- **Translation Latency**: < 500ms average
-- **Audio Quality**: 24kHz PCM16
-- **Connection Time**: < 1s
-- **Supported Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENAI_API_KEY` | OpenAI API key with Whisper, GPT-4, TTS access | ✅ |
+| `DATABASE_URL` | PostgreSQL connection string | ❌ |
+| `NEXTAUTH_SECRET` | NextAuth.js secret | ❌ |
+| `KV_URL` | Vercel KV Redis URL | ❌ |
 
-### Optimization Techniques
+## 📈 Performance
 
-- Server-side API key management
-- Audio chunk streaming
-- Connection pooling
-- Edge function deployment
-- CDN asset delivery
-
-## 🔐 Security
-
-### Implemented Measures
-
-- ✅ API keys stored server-side only
-- ✅ HTTPS/WSS encryption
-- ✅ CORS protection
-- ✅ Rate limiting
-- ✅ Content Security Policy
-- ✅ Input sanitization
-- ✅ Secure headers (HSTS, X-Frame-Options, etc.)
-
-### Best Practices
-
-- Never expose API keys in client code
-- Use environment variables for sensitive data
-- Implement user authentication for production
-- Monitor API usage and costs
-- Regular security audits
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Microphone not working
-- Check browser permissions
-- Ensure HTTPS connection (required for getUserMedia)
-- Try different browser
-
-#### No translation output
-- Verify OpenAI API key is valid
-- Check console for WebSocket errors
-- Ensure language pair is supported
-
-#### Audio playback issues
-- Check browser audio permissions
-- Verify speaker/headphone connection
-- Try refreshing the page
+- **Translation latency:** < 500ms average
+- **Audio quality:** 24kHz PCM16
+- **Supported browsers:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **API timeout:** 60s for audio processing
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Development Workflow
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- [OpenAI](https://openai.com) for the Realtime API
+- [OpenAI](https://openai.com) for powerful AI models
 - [Vercel](https://vercel.com) for hosting and deployment
 - [Next.js](https://nextjs.org) team for the amazing framework
 - All contributors and users of Verbio
 
 ## 📞 Support
 
-- **Documentation**: [docs.verbio.app](https://docs.verbio.app)
-- **Issues**: [GitHub Issues](https://github.com/verbio/verbio-app/issues)
-- **Email**: support@verbio.app
-- **Discord**: [Join our community](https://discord.gg/verbio)
-
-## 🚦 Status
-
-- **Production**: [verbio.app](https://verbio.app) ✅ Live
-- **API Status**: [status.verbio.app](https://status.verbio.app)
-- **Uptime**: 99.9% SLA
+- 📧 Email: support@verbio.app
+- 🐛 Issues: [GitHub Issues](https://github.com/jwillz7667/Verbio/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/jwillz7667/Verbio/discussions)
 
 ---
 
-<p align="center">
-  Built with ❤️ using OpenAI Realtime API
+<div align="center">
+  Made with ❤️ and ☕ by <a href="https://github.com/jwillz7667">jwillz7667</a>
   <br>
-  <a href="https://verbio.app">verbio.app</a>
-</p>
+  ⭐ Star us on GitHub — it helps!
+</div>
