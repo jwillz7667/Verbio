@@ -1,0 +1,58 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  email       String   @unique
+  displayName String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    TranslationSession[]
+}
+
+model TranslationSession {
+  id             String        @id @default(uuid())
+  profileId      String
+  sourceLanguage String
+  targetLanguage String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  profile        Profile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  messages       Message[]
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  sessionId   String
+  role        String   // 'user' | 'assistant'
+  text        String
+  language    String
+  audioUrl    String?
+  voice       String?
+  confidence  Float?
+  createdAt   DateTime @default(now())
+
+  session     TranslationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+

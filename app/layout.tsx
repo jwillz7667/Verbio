@@ -15,7 +15,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Verbio - Real-time Voice Translation',
+  title: {
+    default: 'Verbio - Real-time Voice Translation',
+    template: '%s | Verbio',
+  },
   description: 'Break language barriers with instant AI-powered voice translation between English and Spanish',
   applicationName: 'Verbio',
   authors: [{ name: 'Verbio Team' }],
@@ -27,6 +30,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(APP_CONFIG.url),
+  alternates: {
+    canonical: APP_CONFIG.url,
+  },
   openGraph: {
     title: 'Verbio - Real-time Voice Translation',
     description: 'Break language barriers with instant AI-powered voice translation',
@@ -78,8 +84,20 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/site.webmanifest',
-  alternates: {
-    canonical: APP_CONFIG.url,
+  category: 'Utilities',
+  keywords: [
+    'voice translation',
+    'real-time translation',
+    'AI translator',
+    'speech to speech',
+    'English Spanish translator',
+  ],
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION,
+    other: {
+      'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || '',
+    },
   },
 };
 
@@ -104,6 +122,54 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://api.openai.com" />
         <link rel="dns-prefetch" href="https://api.openai.com" />
+        <link rel="canonical" href={APP_CONFIG.url} />
+        <meta name="theme-color" content="#0f172a" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta property="og:locale" content="en_US" />
+        <script
+          type="application/ld+json"
+          // JSON-LD: Organization + WebSite + SoftwareApplication
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Verbio',
+              url: APP_CONFIG.url,
+              logo: `${APP_CONFIG.url}/apple-touch-icon.png`,
+              sameAs: ['https://twitter.com/verbioapp'],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Verbio',
+              url: APP_CONFIG.url,
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: `${APP_CONFIG.url}/?q={search_term_string}`,
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'Verbio',
+              applicationCategory: 'UtilitiesApplication',
+              operatingSystem: 'Web',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            }),
+          }}
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider
