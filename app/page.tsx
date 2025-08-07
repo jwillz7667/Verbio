@@ -405,6 +405,8 @@ export default function Home() {
             onPlayAudio={playAudioOutput}
             isTranslating={isTranslating || isTextTranslating}
             currentTranscription={currentTranscription}
+            audioLevel={audioLevel}
+            isRecording={isRecording}
           />
         </div>
 

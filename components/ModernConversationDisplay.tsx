@@ -18,6 +18,8 @@ interface ModernConversationDisplayProps {
   onPlayAudio?: (audioUrl: string) => void;
   isTranslating?: boolean;
   currentTranscription?: string;
+  audioLevel?: number;
+  isRecording?: boolean;
 }
 
 export function ModernConversationDisplay({
@@ -25,6 +27,8 @@ export function ModernConversationDisplay({
   onPlayAudio,
   isTranslating,
   currentTranscription,
+  audioLevel = 0,
+  isRecording = false,
 }: ModernConversationDisplayProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -64,12 +68,36 @@ export function ModernConversationDisplay({
         {conversations.length === 0 && !currentTranscription && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-4">
-              <div className="flex justify-center space-x-2">
-                <div className="voice-bar" />
-                <div className="voice-bar" />
-                <div className="voice-bar" />
-                <div className="voice-bar" />
-                <div className="voice-bar" />
+              {/* Responsive mini visualizer based on live audioLevel */}
+              <div className="flex h-10 items-end justify-center gap-1.5">
+                {Array.from({ length: 24 }).map((_, idx) => {
+                  const multipliers = [
+                    0.2, 0.35, 0.5, 0.65, 0.8, 1,
+                    0.85, 0.7, 0.55, 0.4, 0.3, 0.25,
+                    0.25, 0.3, 0.4, 0.55, 0.7, 0.85,
+                    1, 0.8, 0.65, 0.5, 0.35, 0.2,
+                  ];
+                  const m = multipliers[idx] ?? 0.5;
+                  const level = Math.min(1, Math.max(0, audioLevel));
+                  const height = 6 + Math.round(level * 32 * m);
+                  return (
+                    <span
+                      key={idx}
+                      aria-hidden
+                      className="w-1.5 rounded-sm"
+                      style={{
+                        height: `${height}px`,
+                        background:
+                          'linear-gradient(180deg, hsl(var(--primary)), hsl(var(--accent)))',
+                        opacity: isRecording ? 1 : 0.5,
+                        transition: 'height 120ms ease, opacity 200ms ease',
+                        boxShadow: isRecording
+                          ? '0 0 12px hsla(var(--primary),0.35)'
+                          : 'none',
+                      }}
+                    />
+                  );
+                })}
               </div>
               <p className="text-gray-400 text-sm">
                 Start speaking to begin translation
