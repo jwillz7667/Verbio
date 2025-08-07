@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/Switch';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { VoiceVisualizer } from '@/components/VoiceVisualizer';
 import { toast } from 'sonner';
-import { Mic, MicOff, Loader2, Square, Play } from 'lucide-react';
+import { Mic, MicOff, Loader2, Square, Play, Send } from 'lucide-react';
 
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
@@ -34,6 +34,8 @@ export default function Home() {
     audioUrl?: string;
     voice?: string;
   }>>([]);
+  const [textInput, setTextInput] = useState<string>("");
+  const [isTextTranslating, setIsTextTranslating] = useState<boolean>(false);
 
   const {
     disconnect,
@@ -231,6 +233,67 @@ export default function Home() {
     });
   };
 
+  const handleTextTranslate = async () => {
+    const trimmed = textInput.trim();
+    if (!trimmed) return;
+
+    try {
+      setIsTextTranslating(true);
+
+      // Append user's typed message
+      const userMsgId = crypto.randomUUID();
+      setConversations((prev) => [
+        ...prev,
+        {
+          id: userMsgId,
+          type: 'user',
+          text: trimmed,
+          language: sourceLanguage,
+          timestamp: new Date(),
+        },
+      ]);
+
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: trimmed,
+          sourceLanguage,
+          targetLanguage,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Translate failed: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data?.error?.message || 'Translation failed');
+      }
+
+      const translated = data.data;
+      setConversations((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          type: 'assistant',
+          text: translated.text,
+          language: translated.language,
+          timestamp: new Date(),
+          audioUrl: translated.audioUrl,
+        },
+      ]);
+
+      setTextInput("");
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : 'Translation error');
+    } finally {
+      setIsTextTranslating(false);
+    }
+  };
+
   return (
     <main className="min-h-screen relative overflow-hidden">
       {/* Animated background blobs */}
@@ -290,12 +353,57 @@ export default function Home() {
           </div>
         )}
 
+        {/* Text Input Translation */}
+        <div className="mb-8">
+          <div className="glass-panel rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-white/80">
+                Enter text to translate
+              </label>
+              <span className="text-xs text-white/50">
+                {textInput.length}/1000
+              </span>
+            </div>
+            <textarea
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value.slice(0, 1000))}
+              rows={3}
+              maxLength={1000}
+              placeholder={`Type in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}…`}
+              className="w-full resize-y rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 placeholder:text-white/40 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
+            />
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setTextInput("")}
+                disabled={!textInput}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={handleTextTranslate}
+                disabled={!textInput.trim() || isTextTranslating}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 px-3 py-2 text-sm font-medium text-white shadow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isTextTranslating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Translate
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Conversation Display */}
         <div className="mb-8">
           <ModernConversationDisplay
             conversations={conversations}
             onPlayAudio={playAudioOutput}
-            isTranslating={isTranslating}
+            isTranslating={isTranslating || isTextTranslating}
             currentTranscription={currentTranscription}
           />
         </div>
