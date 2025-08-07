@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import { APP_CONFIG } from '@/lib/constants';
 import './globals.css';
 
 const inter = Inter({ 
@@ -25,11 +26,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://verbio.app'),
+  metadataBase: new URL(APP_CONFIG.url),
   openGraph: {
     title: 'Verbio - Real-time Voice Translation',
     description: 'Break language barriers with instant AI-powered voice translation',
-    url: 'https://verbio.app',
+    url: APP_CONFIG.url,
     siteName: 'Verbio',
     images: [
       {
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   alternates: {
-    canonical: 'https://verbio.app',
+    canonical: APP_CONFIG.url,
   },
 };
 
