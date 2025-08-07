@@ -15,15 +15,25 @@ export function Header({
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-3">
+          {/* Light theme logo */}
           <Image
-            src="/vercel.svg"
+            src="/assets/VERBIO-dark-trans.svg"
             alt="Verbio"
-            width={24}
-            height={24}
-            className="opacity-90"
+            width={120}
+            height={28}
+            className="hidden dark:block h-auto w-auto"
+            priority
           />
-          <span className="text-lg font-semibold tracking-tight">Verbio</span>
+          {/* Dark theme logo (for dark backgrounds) */}
+          <Image
+            src="/assets/verbio-logo-light-trans.svg"
+            alt="Verbio"
+            width={120}
+            height={28}
+            className="block dark:hidden h-auto w-auto"
+            priority
+          />
         </Link>
         <div className="flex items-center gap-3">
           <ConnectionStatus status={status} />
