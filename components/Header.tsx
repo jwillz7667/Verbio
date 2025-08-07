@@ -18,7 +18,7 @@ export function Header({
         <Link href="/" className="flex items-center gap-3">
           {/* Light theme logo */}
           <Image
-            src="/assets/VERBIO-dark-trans.svg"
+            src="/brand/VERBIO-dark-trans.svg"
             alt="Verbio"
             width={120}
             height={28}
@@ -27,7 +27,7 @@ export function Header({
           />
           {/* Dark theme logo (for dark backgrounds) */}
           <Image
-            src="/assets/verbio-logo-light-trans.svg"
+            src="/brand/verbio-logo-light-trans.svg"
             alt="Verbio"
             width={120}
             height={28}
