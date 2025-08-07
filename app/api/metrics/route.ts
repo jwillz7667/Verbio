@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ApiResponse, MetricsData } from '@/types';
+import type { ApiResponse, MetricsData } from '@/types/index';
 
 let metricsStore = {
   totalTranslations: 0,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {

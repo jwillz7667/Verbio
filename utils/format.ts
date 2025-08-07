@@ -1,4 +1,4 @@
-import { format, formatDistance, formatRelative } from 'date-fns';
+import { format, formatDistance } from 'date-fns';
 
 export function formatTimestamp(date: Date | string | number): string {
   const d = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;

@@ -38,7 +38,6 @@ export default function Home() {
     isConnected,
     connectionStatus,
     currentTranscription,
-    finalTranslation,
     updateLanguages
   } = useRealtimeTranslation({
     onTranscriptionUpdate: (text) => {

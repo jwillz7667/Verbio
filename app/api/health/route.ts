@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { APP_CONFIG } from '@/lib/constants';
-import type { HealthCheckResponse } from '@/types';
+import type { HealthCheckResponse } from '@/types/index';
 
 const startTime = Date.now();
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const uptime = Math.floor((Date.now() - startTime) / 1000);
   
   let openaiStatus = false;

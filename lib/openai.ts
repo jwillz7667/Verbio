@@ -84,7 +84,9 @@ export async function transcribeAudio(audioBuffer: Buffer, language?: string): P
   }
 
   try {
-    const audioFile = new File([audioBuffer], 'audio.wav', { type: 'audio/wav' });
+    // Convert Buffer to Uint8Array for proper Blob creation
+    const uint8Array = new Uint8Array(audioBuffer.buffer as ArrayBuffer, audioBuffer.byteOffset, audioBuffer.byteLength);
+    const audioFile = new File([uint8Array], 'audio.wav', { type: 'audio/wav' });
     
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,

@@ -98,7 +98,7 @@ export class AudioProcessor {
 
     const float32Data = this.pcm16ToFloat32(audioData);
     const audioBuffer = this.context.createBuffer(1, float32Data.length, this.sampleRate);
-    audioBuffer.copyToChannel(float32Data, 0);
+    audioBuffer.copyToChannel(new Float32Array(float32Data), 0);
 
     const source = this.context.createBufferSource();
     source.buffer = audioBuffer;

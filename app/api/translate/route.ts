@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { translateText, transcribeAudio } from '@/lib/openai';
 import { RATE_LIMIT, ERROR_MESSAGES } from '@/lib/constants';
-import type { ApiResponse, TranslationResult, LanguageCode, VoiceId } from '@/types';
+import type { ApiResponse, TranslationResult, LanguageCode, VoiceId } from '@/types/index';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
 const rateLimiter = new RateLimiterMemory({
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
