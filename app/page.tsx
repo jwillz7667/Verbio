@@ -1,6 +1,6 @@
 "use client";
 
-import VoiceApp from "./Voice Translation App/App";
+import VoiceApp from "@/components/voice-app/App";
 
 export default function Home() {
   return <VoiceApp />;

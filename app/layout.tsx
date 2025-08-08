@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { APP_CONFIG } from '@/lib/constants';
 import './globals.css';
-import './Voice Translation App/styles/globals.css';
+// Voice app styles are merged into globals.css
 
 const inter = Inter({ 
   subsets: ['latin'],
