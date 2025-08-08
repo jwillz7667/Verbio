@@ -184,3 +184,112 @@ export function createRealtimeSessionConfig({
 
 export const OPENAI_REALTIME_URL = 'wss://api.openai.com/v1/realtime';
 export const OPENAI_REALTIME_MODEL = 'gpt-4o-realtime-preview-2024-12-17';
+
+// ===== OpenAI Realtime API Event Types (client -> server) =====
+
+export type RealtimeClientEvent =
+  // Update session parameters (model, modalities, voice, turn detection, etc.)
+  | {
+      type: 'session.update';
+      session: {
+        model?: string;
+        modalities?: Array<'text' | 'audio' | 'vision'>;
+        instructions?: string;
+        voice?: VoiceId;
+        input_audio_format?: 'pcm16' | 'wav' | 'mp3' | 'opus';
+        output_audio_format?: 'pcm16' | 'wav' | 'mp3' | 'opus';
+        input_audio_transcription?: { model: string };
+        turn_detection?: {
+          type: 'server_vad';
+          threshold?: number;
+          prefix_padding_ms?: number;
+          silence_duration_ms?: number;
+        };
+        temperature?: number;
+        max_response_output_tokens?: number;
+      };
+    }
+  // Append PCM16 base64 audio to input buffer
+  | {
+      type: 'input_audio_buffer.append';
+      audio: {
+        data: string; // base64-encoded audio chunk
+        format?: 'pcm16';
+      };
+    }
+  // Commit the current input buffer as a complete user utterance
+  | {
+      type: 'input_audio_buffer.commit';
+    }
+  // Clear any pending audio frames from the input buffer
+  | {
+      type: 'input_audio_buffer.clear';
+    }
+  // Request the model to create a response given current session/buffer
+  | {
+      type: 'response.create';
+      response?: {
+        modalities?: Array<'text' | 'audio'>;
+        instructions?: string;
+        conversation?: 'auto' | 'none';
+      };
+    }
+  // Cancel the current/ongoing response generation
+  | {
+      type: 'response.cancel';
+    };
+
+// ===== OpenAI Realtime API Event Types (server -> client) =====
+
+export type RealtimeServerEvent =
+  // Generic error event
+  | {
+      type: 'error';
+      error: { type?: string; message: string; code?: string | number };
+    }
+  // Lifecycle for unified response
+  | { type: 'response.create' }
+  | { type: 'response.cancel' }
+  | { type: 'response.done' }
+  // Text streaming (unified + explicit text channel)
+  | { type: 'response.delta'; delta: string }
+  | { type: 'response.text.delta'; text: string }
+  | { type: 'response.text.done' }
+  // Audio streaming (explicit audio channel)
+  | { type: 'response.audio.delta'; audio: { data: string; format?: 'pcm16' | 'mp3' | 'opus' } }
+  | { type: 'response.audio.done' }
+  // Server VAD notifications
+  | { type: 'input_audio_buffer.speech_started' }
+  | { type: 'input_audio_buffer.speech_stopped' };
+
+// ===== Helper Builders (client -> server) =====
+
+export function buildSessionUpdate(evt: RealtimeClientEvent & { type: 'session.update' }): RealtimeClientEvent {
+  return evt;
+}
+
+export function buildAppendPcm16(base64Pcm16: string): RealtimeClientEvent {
+  return {
+    type: 'input_audio_buffer.append',
+    audio: { data: base64Pcm16, format: 'pcm16' },
+  };
+}
+
+export function buildCommit(): RealtimeClientEvent {
+  return { type: 'input_audio_buffer.commit' };
+}
+
+export function buildClear(): RealtimeClientEvent {
+  return { type: 'input_audio_buffer.clear' };
+}
+
+export function buildResponseCreate(opts?: RealtimeClientEvent & { type: 'response.create' }['response']): RealtimeClientEvent {
+  return {
+    type: 'response.create',
+    response: {
+      modalities: opts?.modalities || ['audio', 'text'],
+      instructions: opts?.instructions,
+      conversation: opts?.conversation || 'auto',
+    },
+  };
+}
