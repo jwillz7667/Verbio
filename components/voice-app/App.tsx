@@ -16,9 +16,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ArrowLeft, User, Mic, Camera, Keyboard, HelpCircle } from 'lucide-react';
 import { motion, useTransform, useSpring, AnimatePresence } from 'framer-motion';
-import { useRealtimeTranslation } from '@/hooks/useRealtimeTranslation';
-import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
+import { useRealtimeVoiceRealtime } from '@/hooks/useRealtimeVoiceRealtime';
 
 type Page = 'main' | 'signin' | 'signup' | 'settings';
 
@@ -69,64 +68,23 @@ export default function App() {
   const fromLangCodeRef = useRef<'en' | 'es'>(toLangCode(fromLanguage));
   const toLangCodeRef = useRef<'en' | 'es'>(toLangCode(toLanguage));
 
-  // Realtime translation hook
-  const {
-    connectionStatus,
-    currentTranscription,
-    isProcessing: rtProcessing,
-    connect,
-    sendAudioData,
-    updateLanguages,
-    clearTranscription,
-  } = useRealtimeTranslation({
-    onTranscriptionUpdate: (text) => {
-      setTranslationData((prev) => ({
-        originalText: text,
-        translatedText: prev?.translatedText || '',
-        fromLanguage,
-        toLanguage,
+  // Accumulate streaming partials (assistant text)
+  const partialRef = useRef('');
+  const { connect: connectRtc, disconnect: disconnectRtc, isConnected, isConnecting } = useRealtimeVoiceRealtime({
+    onPartialText: (delta) => {
+      partialRef.current += delta;
+      setTranslationData({
+        originalText: '',
+        translatedText: partialRef.current,
+        fromLanguage: fromLangNameRef.current,
+        toLanguage: toLangNameRef.current,
         inputType: 'voice',
         isProcessing: true,
-        confidence: prev?.confidence,
-      }));
-    },
-    onTranslationComplete: (result) => {
-      setTranslationData({
-        originalText: currentTranscription || translationData?.originalText || '',
-        translatedText: result.text,
-        fromLanguage,
-        toLanguage,
-        inputType: 'voice',
-        isProcessing: false,
-        confidence: result.confidence ?? 0.9,
       });
     },
     onError: () => {
       setIsProcessing(false);
     },
-  });
-
-  // Initialize recorder for push-to-talk style capture
-  const { startRecording, stopRecording } = useAudioRecorder({
-    onRecordingComplete: async (blob) => {
-      try {
-        setIsProcessing(true);
-        setTranslationData({
-          originalText: currentTranscription || '',
-          translatedText: '',
-          fromLanguage,
-          toLanguage,
-          inputType: 'voice',
-          isProcessing: true,
-        });
-        const arrayBuffer = await blob.arrayBuffer();
-        await sendAudioData(arrayBuffer, 'auto');
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    sampleRate: 24000,
-    chunkSize: 4096,
   });
 
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
@@ -232,16 +190,14 @@ export default function App() {
     toLangNameRef.current = toLanguage;
     fromLangCodeRef.current = toLangCode(fromLanguage);
     toLangCodeRef.current = toLangCode(toLanguage);
-    updateLanguages(fromLangCodeRef.current, toLangCodeRef.current);
-  }, [fromLanguage, toLanguage, updateLanguages]);
+  }, [fromLanguage, toLanguage]);
 
   // Start/stop recording when mic toggled
   useEffect(() => {
     const run = async () => {
       if (isListening) {
-        await connect('', fromLangCodeRef.current, toLangCodeRef.current);
-        await startRecording();
-        clearTranscription();
+        partialRef.current = '';
+        await connectRtc();
         setTranslationData({
           originalText: '',
           translatedText: '',
@@ -251,12 +207,12 @@ export default function App() {
           isProcessing: true,
         });
       } else {
-        // Stopping triggers onRecordingComplete which calls sendAudioData
-        await stopRecording();
+        await disconnectRtc();
+        setTranslationData((prev) => prev ? { ...prev, isProcessing: false } : prev);
       }
     };
     void run();
-  }, [isListening, connect, startRecording, stopRecording, clearTranscription]);
+  }, [isListening, connectRtc, disconnectRtc]);
 
   // Reset mouse tracking when page changes
   useEffect(() => {
@@ -505,10 +461,7 @@ export default function App() {
             isListening={isListening}
             setIsListening={(listening) => {
               setIsListening(listening);
-              if (listening) {
-                handleClearTranslation();
-                clearTranscription();
-              }
+              if (listening) handleClearTranslation();
             }}
           />
         </motion.div>
@@ -613,11 +566,11 @@ export default function App() {
 
   return (
     <AnimatedBackground 
-      isListening={isListening || isProcessing || rtProcessing} 
+      isListening={isListening || isProcessing || isConnecting} 
       variant={getBackgroundVariant()}
     >
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-        <ConnectionStatus status={connectionStatus} />
+        <ConnectionStatus status={isConnecting ? 'connecting' : isConnected ? 'connected' : 'disconnected'} />
       </div>
       {renderCurrentPage()}
     </AnimatedBackground>

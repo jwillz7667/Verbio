@@ -5,12 +5,15 @@ interface UseRealtimeVoiceRealtimeOptions {
   onPartialText?: (text: string) => void;
 }
 
+type Lang = 'en' | 'es';
+
 export function useRealtimeVoiceRealtime(options: UseRealtimeVoiceRealtimeOptions = {}) {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const sessionPrefsRef = useRef<{ source: Lang; target: Lang; voice?: string }>({ source: 'en', target: 'es' });
 
   useEffect(() => {
     remoteAudioRef.current = new Audio();
@@ -27,10 +30,17 @@ export function useRealtimeVoiceRealtime(options: UseRealtimeVoiceRealtimeOption
     setIsConnecting(false);
   }, []);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (opts?: { sourceLanguage?: Lang; targetLanguage?: Lang; voice?: string }) => {
     if (isConnecting || isConnected) return;
     setIsConnecting(true);
     try {
+      if (opts) {
+        sessionPrefsRef.current = {
+          source: opts.sourceLanguage ?? sessionPrefsRef.current.source,
+          target: opts.targetLanguage ?? sessionPrefsRef.current.target,
+          voice: opts.voice ?? sessionPrefsRef.current.voice,
+        };
+      }
       const tokenResp = await fetch('/api/realtime/session');
       if (!tokenResp.ok) throw new Error('Failed to create realtime session');
       const { client_secret } = await tokenResp.json();
@@ -50,6 +60,27 @@ export function useRealtimeVoiceRealtime(options: UseRealtimeVoiceRealtimeOption
       // DataChannel for events and partials
       const dc = pc.createDataChannel('oai-events');
       dataChannelRef.current = dc;
+      dc.onopen = () => {
+        try {
+          // Best practice: update session after DC opens with explicit translation instructions
+          const prefs = sessionPrefsRef.current;
+          const instructions = `You are a professional live interpreter. Translate spoken ${
+            prefs.source === 'en' ? 'English' : 'Spanish'
+          } into ${prefs.target === 'en' ? 'English' : 'Spanish'} in real time. Keep meaning, tone, and natural spoken cadence.`;
+          const msg = {
+            type: 'session.update',
+            session: {
+              instructions,
+              voice: prefs.voice || 'verse',
+              input_audio_format: 'pcm16',
+              // Let server manage VAD per session mint config; we can still pass preferences here
+              turn_detection: { type: 'server_vad', threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
+              input_audio_transcription: { model: 'gpt-4o-mini-transcribe' },
+            },
+          } as const;
+          dc.send(JSON.stringify(msg));
+        } catch {}
+      };
       dc.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
