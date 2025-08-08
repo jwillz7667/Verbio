@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { getRedis } from '@/lib/redis';
 
 export const runtime = 'edge';
 
@@ -32,7 +33,14 @@ export async function GET(req: NextRequest) {
       const ws = server as WebSocket;
       ws.accept();
 
-      // Simple in-memory broker per room using globalThis (Edge runtime limited lifetime)
+      // Track membership in Redis set for observability and soft state storage
+      try {
+        const redis = getRedis();
+        await redis.sadd(`room:${roomId}:peers`, peerId);
+        await redis.expire(`room:${roomId}:peers`, 60 * 10);
+      } catch {}
+
+      // In-memory fan-out for this instance
       const g = globalThis as any;
       g.__rooms = g.__rooms || new Map<string, Set<WebSocket>>();
       if (!g.__rooms.has(roomId)) g.__rooms.set(roomId, new Set());
@@ -65,6 +73,10 @@ export async function GET(req: NextRequest) {
         room.delete(ws);
         broadcast({ type: 'peer-leave', peerId, roomId, ts: Date.now() });
         if (room.size === 0) g.__rooms.delete(roomId);
+        try {
+          const redis = getRedis();
+          redis.srem(`room:${roomId}:peers`, peerId).catch(() => {});
+        } catch {}
       });
     } catch (e) {
       (server as any).close();
