@@ -1,3 +1,4 @@
+"use client";
 // components/ConnectionStatus.tsx
 import { Wifi, WifiOff, Loader2 } from 'lucide-react';
 
