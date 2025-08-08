@@ -12,11 +12,20 @@ export const openai = apiKey && OpenAI ? new OpenAI({
   dangerouslyAllowBrowser: false,
 }) : null;
 
+export type VoiceId =
+  | 'alloy'
+  | 'echo'
+  | 'fable'
+  | 'onyx'
+  | 'nova'
+  | 'shimmer'
+  | 'verse';
+
 export interface TranslationRequest {
   text: string;
   sourceLanguage: 'en' | 'es';
   targetLanguage: 'en' | 'es';
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  voice?: VoiceId;
 }
 
 export interface TranslationResponse {
@@ -26,11 +35,16 @@ export interface TranslationResponse {
   detectedLanguage?: string;
 }
 
+// Preferred models (as of latest OpenAI guidance)
+const MODEL_TEXT_PRIMARY = 'gpt-4o-mini'; // fast, low-latency, high quality
+const MODEL_TTS_PRIMARY = 'gpt-4o-mini-tts';
+const MODEL_TRANSCRIBE_PRIMARY = 'gpt-4o-mini-transcribe';
+
 export async function translateText({
   text,
   sourceLanguage,
   targetLanguage,
-  voice = 'alloy'
+  voice = 'verse',
 }: TranslationRequest): Promise<TranslationResponse> {
   if (!openai) {
     throw new Error('OpenAI client not initialized');
@@ -43,20 +57,37 @@ export async function translateText({
       targetLanguage === 'en' ? 'English' : 'Spanish'
     }. Maintain the tone, emotion, and context of the original text. Provide only the translation without any additional commentary.`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: text }
-      ],
-      temperature: 0.3,
-      max_tokens: 1000,
-    });
+    // Prefer Responses API if available
+    let translatedText = '';
+    if (openai.responses?.create) {
+      const resp = await openai.responses.create({
+        model: MODEL_TEXT_PRIMARY,
+        input: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text },
+        ],
+        temperature: 0.3,
+        max_output_tokens: 1000,
+      });
+      // Responses API returns output in a unified format
+      translatedText = resp.output_text || resp?.output?.[0]?.content?.[0]?.text?.value || '';
+    } else {
+      // Fallback to Chat Completions if Responses API not present
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text },
+        ],
+        temperature: 0.3,
+        max_tokens: 1000,
+      });
+      translatedText = completion.choices[0]?.message?.content || '';
+    }
 
-    const translatedText = completion.choices[0]?.message?.content || '';
-
+    // Text-to-Speech via the latest TTS model
     const audioResponse = await openai.audio.speech.create({
-      model: 'tts-1',
+      model: MODEL_TTS_PRIMARY,
       voice,
       input: translatedText,
       response_format: 'mp3',
@@ -85,12 +116,16 @@ export async function transcribeAudio(audioBuffer: Buffer, language?: string): P
 
   try {
     // Convert Buffer to Uint8Array for proper Blob creation
-    const uint8Array = new Uint8Array(audioBuffer.buffer as ArrayBuffer, audioBuffer.byteOffset, audioBuffer.byteLength);
+    const uint8Array = new Uint8Array(
+      (audioBuffer.buffer as ArrayBuffer),
+      audioBuffer.byteOffset,
+      audioBuffer.byteLength
+    );
     const audioFile = new File([uint8Array], 'audio.wav', { type: 'audio/wav' });
-    
+
     const transcription = await openai.audio.transcriptions.create({
       file: audioFile,
-      model: 'whisper-1',
+      model: MODEL_TRANSCRIBE_PRIMARY,
       language: language || 'en',
       response_format: 'text',
     });
@@ -104,7 +139,7 @@ export async function transcribeAudio(audioBuffer: Buffer, language?: string): P
 
 export interface RealtimeSessionConfig {
   model?: string;
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  voice?: VoiceId;
   temperature?: number;
   maxTokens?: number;
   sourceLanguage: 'en' | 'es';
@@ -113,11 +148,11 @@ export interface RealtimeSessionConfig {
 
 export function createRealtimeSessionConfig({
   model = 'gpt-4o-realtime-preview-2024-12-17',
-  voice = 'alloy',
+  voice = 'verse',
   temperature = 0.7,
   maxTokens = 4096,
   sourceLanguage,
-  targetLanguage
+  targetLanguage,
 }: RealtimeSessionConfig) {
   return {
     type: 'session.update',
@@ -133,17 +168,17 @@ export function createRealtimeSessionConfig({
       input_audio_format: 'pcm16',
       output_audio_format: 'pcm16',
       input_audio_transcription: {
-        model: 'whisper-1'
+        model: MODEL_TRANSCRIBE_PRIMARY,
       },
       turn_detection: {
         type: 'server_vad',
         threshold: 0.5,
         prefix_padding_ms: 300,
-        silence_duration_ms: 500
+        silence_duration_ms: 500,
       },
       temperature,
-      max_response_output_tokens: maxTokens
-    }
+      max_response_output_tokens: maxTokens,
+    },
   };
 }
 
