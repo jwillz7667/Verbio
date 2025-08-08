@@ -16,6 +16,9 @@ const nextConfig = {
         hostname: '**.vercel.app',
       },
     ],
+    // Enable data URLs for inline SVG fallback and tighten CSP for images
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src 'none';",
   },
   
   experimental: {
@@ -49,7 +52,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(), microphone=(self), geolocation=()',
           },
           {
             key: 'Cache-Control',
