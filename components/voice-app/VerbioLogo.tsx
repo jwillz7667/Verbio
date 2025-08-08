@@ -126,6 +126,7 @@ export function VerbioLogo({ isListening = false, style, className }: VerbioLogo
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
+              backgroundSize: "200% 200%",
               letterSpacing: '0.1em'
             }}
             transition={{
