@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-import { getRedis } from '@/lib/redis';
+import { kv } from '@vercel/kv';
 
 export const runtime = 'edge';
 
@@ -33,11 +33,10 @@ export async function GET(req: NextRequest) {
       const ws = server as WebSocket;
       ws.accept();
 
-      // Track membership in Redis set for observability and soft state storage
+      // Track membership using Vercel KV if configured
       try {
-        const redis = getRedis();
-        await redis.sadd(`room:${roomId}:peers`, peerId);
-        await redis.expire(`room:${roomId}:peers`, 60 * 10);
+        await kv.sadd(`room:${roomId}:peers`, peerId);
+        await kv.expire(`room:${roomId}:peers`, 60 * 10);
       } catch {}
 
       // In-memory fan-out for this instance
@@ -60,7 +59,6 @@ export async function GET(req: NextRequest) {
       ws.addEventListener('message', (ev: MessageEvent) => {
         try {
           const msg = JSON.parse(ev.data as string);
-          // relay signaling messages to room
           if (msg && typeof msg === 'object') {
             msg.peerId = peerId;
             msg.ts = Date.now();
@@ -74,8 +72,7 @@ export async function GET(req: NextRequest) {
         broadcast({ type: 'peer-leave', peerId, roomId, ts: Date.now() });
         if (room.size === 0) g.__rooms.delete(roomId);
         try {
-          const redis = getRedis();
-          redis.srem(`room:${roomId}:peers`, peerId).catch(() => {});
+          kv.srem(`room:${roomId}:peers`, peerId).catch(() => {});
         } catch {}
       });
     } catch (e) {

@@ -283,7 +283,10 @@ export function buildClear(): RealtimeClientEvent {
   return { type: 'input_audio_buffer.clear' };
 }
 
-export function buildResponseCreate(opts?: RealtimeClientEvent & { type: 'response.create' }['response']): RealtimeClientEvent {
+type ResponseCreateEvent = Extract<RealtimeClientEvent, { type: 'response.create' }>;
+type ResponseCreateOptions = NonNullable<ResponseCreateEvent['response']>;
+
+export function buildResponseCreate(opts?: Partial<ResponseCreateOptions>): RealtimeClientEvent {
   return {
     type: 'response.create',
     response: {

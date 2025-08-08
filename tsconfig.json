@@ -28,6 +28,7 @@
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./hooks/*"],
+      "@/store/*": ["./store/*"],
       "@/utils/*": ["./utils/*"],
       "@/types": ["./types/index.d.ts"],
       "@/types/*": ["./types/*"],

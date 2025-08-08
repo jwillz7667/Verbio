@@ -10,7 +10,6 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { Header } from '@/components/Header';
 import { Switch } from '@/components/ui/Switch';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { VoiceVisualizer } from '@/components/VoiceVisualizer';
 import { toast } from 'sonner';
 import { Mic, MicOff, Loader2, Square, Play, Send, ArrowLeftRight } from 'lucide-react';
 
@@ -459,16 +458,6 @@ export default function Home() {
             isRecording={isRecording}
           />
         </div>
-
-        {/* Voice Visualizer */}
-        {isRecording && (
-          <div className="mb-8 glass-panel rounded-2xl p-4 hover-lift">
-            <VoiceVisualizer 
-              audioLevel={audioLevel}
-              isActive={isRecording}
-            />
-          </div>
-        )}
 
         {/* Recording Controls */}
         <div className="flex flex-col items-center gap-6">

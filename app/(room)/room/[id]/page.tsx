@@ -3,10 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtime } from '@/hooks/useRealtime';
 import { useRoomStore } from '@/store/roomStore';
-import { useAttachRemoteAudio } from '@/hooks/useRoomMedia';
 import { SimpleVAD } from '@/lib/audio/vad';
-import dynamic from 'next/dynamic';
-const VoiceVisualizer = dynamic(() => import('@/components/VoiceVisualizer').then(m => m.VoiceVisualizer).catch(() => ({ default: () => null })), { ssr: false });
+import { useAttachRemoteAudio } from '@/hooks/useRoomMedia';
 
 export default function RoomPage({ params }: { params: { id: string } }) {
   const roomId = params.id;
@@ -17,10 +15,11 @@ export default function RoomPage({ params }: { params: { id: string } }) {
   const [rms, setRms] = useState(0);
   const [zcr, setZcr] = useState(0);
   const vad = useMemo(() => new SimpleVAD({ rmsThreshold: 0.02, zcrThreshold: 0.02, hangoverMs: 250 }), []);
-  useAttachRemoteAudio(peers);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const localAudioRef = useRef<HTMLAudioElement>(null);
+
+  useAttachRemoteAudio(peers);
 
   useEffect(() => {
     (async () => {

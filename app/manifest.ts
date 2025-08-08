@@ -10,15 +10,12 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#ffffff',
     theme_color: '#1a4363',
     icons: [
-      // Next.js app/icon.tsx and app/apple-icon.tsx emit at /icon and /apple-icon (no .png extension)
-      { src: '/icon', sizes: '64x64', type: 'image/png' },
-      { src: '/apple-icon', sizes: '180x180', type: 'image/png' },
-      { src: '/apple-icon-dark', sizes: '180x180', type: 'image/png', purpose: 'maskable' },
+      { src: '/favicon.ico', sizes: '32x32 48x48 64x64', type: 'image/x-icon' },
+      { src: '/brand/verbio-logo-light-trans.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }
     ],
     categories: ['utilities', 'productivity'],
     lang: 'en',
     scope: '/',
-    // Use relative id to avoid cross-origin warnings between apex and www subdomain
     id: '/',
   };
 }
