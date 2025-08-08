@@ -1,0 +1,62 @@
+---
+alwaysApply: false
+---
+Where you are (quick read)
+Next.js 14 + TypeScript + Tailwind + Framer Motion; real-time translation UX with mic control, convo mode, glassmorphism UI. Uses OpenAI (Whisper/GPT/TTS), deploy target Vercel; has health endpoint, test scaffolding (Jest/Playwright), and docs for deploy. 
+GitHub
+North-star product
+Instant bilingual conversation with barge-in (interruptible TTS), near-simultaneous streaming translation, zero boilerplate UX friction (one button, hotkeys, auto VAD).
+Room mode: translate multiple speakers live (meeting/table/vehicle) with diarization and language auto-ID.
+Everywhere: PWA + native wrappers; low-latency edge everywhere; offline degrade.
+Priority roadmap (do these in order)
+OpenAI Realtime end-to-end (WebRTC)
+Replace REST/HTTP chunks with WebRTC Realtime for mic → partial STT → partial translation → partial TTS round-trips; implement server “speak” events and client barge-in (stop/reset audio pipeline instantly).
+Ship server streaming proxy on Vercel Edge (Node 20, @vercel/edge) with auth fan-out to protect keys.
+Latency killers
+Client VAD (WebAudio + RNNoise wasm) to only ship voiced frames.
+Opus @ 24kHz upstream; PCM16 only inside model boundary if required.
+Audio worklets for drift-free playback; jitter buffer with 2–3 packet depth; pre-roll TTS to avoid first-word cutoffs.
+Diarization + multi-speaker room mode
+Browser: optional multi-mic array (or mono + on-device diarization wasm). Server: track speakers by energy + embedding (speaker ID) and tag translated lines per speaker.
+Interruptible TTS & side-tone
+Keep last N TTS SSRC frames; support barge-in → fade/flush; short sidetone so speakers hear themselves (reduces over-talk).
+Offline safety
+whisper.cpp wasm for fallback STT; lexical-only local translation for a few high-frequency phrases; queue to resume when online.
+Security & sessions
+Rotate ephemeral Realtime tokens per session; strict CORS; signed session cookies; per-minute usage limits; IP/device fingerprint throttles.
+Delight UI (award-bait)
+Glass/clay hybrid theme with depth blur, neon accents; springy micro-interactions on mic press, VAD pulsing, and transcript line-in.
+Conversation canvas: left = original, right = translated, live word-by-word paint; colorways per speaker.
+Concrete repo upgrades (PR checklist)
+/app/api/realtime/route.ts
+Issue: add WebRTC SDP exchange (offer/answer) → broker Realtime session; stream events to client; ephemeral token mint.
+/components/VoiceVisualizer.tsx
+Swap ScriptProcessor for AudioWorklet; render VAD pulse + RMS trail; show latency badge (current end-to-end ms).
+/hooks/useRealtimeTranslation.ts
+Convert to state machine (xstate/zustand): idle → connecting → listening → translating → speaking; barge-in interrupt path.
+/lib/audio/
+Add vad.ts (RNNoise wasm), jitterBuffer.ts, opusEncoder.ts; small packet sequencer with clock recovery.
+/app/(room)/room/[id]/page.tsx
+New “Room Mode” route; SFU-lite via WebRTC peer mesh ≤4 peers; beyond that, let server relay audio frames and fan-out translations.
+/app/api/token/route.ts
+Mint ephemeral tokens (JWT, 60–120s ttl) to open Realtime; store per-session caps.
+Infra & perf
+Edge-first: place signaling on Vercel Edge Functions; push model region-closest.
+Observability: OTEL traces for spans: mic_capture, encode, upstream, stt_partial, mt_partial, tts_partial, playback. Correlate with a sessionId.
+Budgets: e2e p95 < 350 ms (US-to-US), room mode p95 < 450 ms. Fail open to captions if TTS stalls > 1.2s.
+Latest frontend stack (no placeholders, production only)
+Next.js 14 App Router, React 19 concurrent features where stable, Server Actions for token mint.
+Tailwind 3.4, shadcn/ui + Radix, Framer Motion 11; container queries; fluid type; WCAG 2.2 AA.
+React Hook Form + Zod for any settings panes; Zustand for real-time UI state; next/image with AVIF/WebP.
+SEO: Metadata API, OG images per session, canonical links; Core Web Vitals budget gates in CI.
+CI/CD gates (block merge if fails)
+Unit (Vitest), E2E (Playwright) with puppeteer-audio harness for mic/TTS loopback.
+Lighthouse CI: p95 LCP < 2.0s, CLS < 0.05, TBT < 200 ms.
+Audio perf test: scripted ping of round-trip (send 1-kHz tone burst → measure playback timestamp) — assert p95 latency budget.
+“ARCHON-DEV” system prompt tailors for Verbio
+Use the ARCHON-DEV system prompt we built and set:
+FRAMEWORK=Next.js 14
+BACKEND=Node 20 (Edge + Node runtimes)
+DB=Postgres 16 (sessions/analytics), KV=Vercel KV
+OBS=OpenTelemetry + Sentry
+MANDATE: “Implement WebRTC Realtime, VAD, barge-in, and room mode. Ship runnable code, no placeholders.”
