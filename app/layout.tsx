@@ -5,11 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
-import { PageTransitions } from '@/components/PageTransitions';
-import CommandPalette from '@/components/CommandPalette';
-import { Dock } from '@/components/ui/Dock';
 import { APP_CONFIG } from '@/lib/constants';
-import { Footer } from '@/components/Footer';
 import './globals.css';
 import './Voice Translation App/styles/globals.css';
 
@@ -184,15 +180,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            {/* Smooth page transitions across the app */}
-            <div id="app-shell" className="relative min-h-dvh pb-24">
-              {/* Page transition wrapper */}
-              <PageTransitions>{children}</PageTransitions>
-              <Dock />
+            <div id="app-shell" className="relative min-h-dvh">
+              {children}
             </div>
-            {/* Global command palette (Cmd/Ctrl+K) */}
-            <CommandPalette />
-            <Footer />
             <Toaster 
               position="top-center"
               toastOptions={{
