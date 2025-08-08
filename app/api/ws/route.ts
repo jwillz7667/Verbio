@@ -21,7 +21,11 @@ export async function GET(req: NextRequest) {
     return new Response('Expected websocket', { status: 426 });
   }
 
-  const [client, server] = Object.values(new (globalThis as any).WebSocketPair());
+  // WebSocketPair is available in the Edge runtime but not typed in lib.dom.d.ts
+  const pair = new (globalThis as any).WebSocketPair();
+  type WebSocketWithAccept = WebSocket & { accept: () => void };
+  const client = pair[0] as WebSocket;
+  const server = pair[1] as WebSocketWithAccept;
 
   (async () => {
     try {
@@ -30,7 +34,7 @@ export async function GET(req: NextRequest) {
       const peerId = claims.sub;
       const name = claims.name || 'Guest';
 
-      const ws = server as WebSocket;
+      const ws = server as WebSocketWithAccept;
       ws.accept();
 
       // Track membership using Vercel KV if configured
@@ -80,7 +84,8 @@ export async function GET(req: NextRequest) {
     }
   })();
 
-  return new Response(null, { status: 101, webSocket: client });
+  // The `webSocket` ResponseInit extension isn't in TypeScript's standard lib types
+  return new Response(null, { status: 101, webSocket: client } as any);
 }
 
 

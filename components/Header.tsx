@@ -13,8 +13,8 @@ export function Header({
   status: "disconnected" | "connecting" | "connected" | "error";
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-transparent">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 rounded-2xl mt-2 backdrop-blur-xl bg-white/60 dark:bg-black/40 border border-black/5 dark:border-white/10 shadow-sm">
         <Link href="/" className="flex items-center gap-3">
           {/* Light theme logo */}
           <Image

@@ -5,9 +5,13 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import { PageTransitions } from '@/components/PageTransitions';
+import CommandPalette from '@/components/CommandPalette';
+import { Dock } from '@/components/ui/Dock';
 import { APP_CONFIG } from '@/lib/constants';
 import { Footer } from '@/components/Footer';
 import './globals.css';
+import './Voice Translation App/styles/globals.css';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -84,7 +88,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.webmanifest',
   category: 'Utilities',
   keywords: [
     'voice translation',
@@ -180,7 +184,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            {children}
+            {/* Smooth page transitions across the app */}
+            <div id="app-shell" className="relative min-h-dvh pb-24">
+              {/* Page transition wrapper */}
+              <PageTransitions>{children}</PageTransitions>
+              <Dock />
+            </div>
+            {/* Global command palette (Cmd/Ctrl+K) */}
+            <CommandPalette />
             <Footer />
             <Toaster 
               position="top-center"

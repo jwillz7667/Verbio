@@ -5,13 +5,19 @@ import { useRealtimeTranslation } from '@/hooks/useRealtimeTranslation';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useRealtimeVoiceRealtime } from '@/hooks/useRealtimeVoiceRealtime';
 import { ModernConversationDisplay } from '@/components/ModernConversationDisplay';
-import { LanguageSelector } from '@/components/LanguageSelector';
+// import { LanguageSelector } from '@/components/LanguageSelector';
+import { FloatingMic } from '@/components/ui/FloatingMic';
+import { LanguagePill } from '@/components/ui/LanguagePill';
+import { ListeningOrb } from '@/components/ui/ListeningOrb';
+import { TipChips } from '@/components/ui/TipChips';
+import { LanguageCard } from '@/components/ui/LanguageCard';
+import { InputPill } from '@/components/ui/InputPill';
 // removed ConnectionStatus import (now used inside Header)
 import { Header } from '@/components/Header';
 import { Switch } from '@/components/ui/Switch';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { toast } from 'sonner';
-import { Mic, MicOff, Loader2, Square, Play, Send, ArrowLeftRight } from 'lucide-react';
+import { Mic, MicOff, Loader2, Square, Play } from 'lucide-react';
 
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
@@ -325,9 +331,18 @@ export default function Home() {
       </div>
 
       <Header status={connectionStatus} />
+      <LanguagePill from={sourceLanguage === 'en' ? 'English' : 'Spanish'} to={targetLanguage === 'en' ? 'English' : 'Spanish'} onSwap={swapLanguages} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Listening header and orb */}
+        <div className="text-center">
+          <p className="text-sm text-black/60 dark:text-white/60">Say something. I’ll translate it instantly.</p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight">
+            Speak Now, I’m <span className="glow-text">Listening…</span>
+          </h2>
+        </div>
+        <ListeningOrb level={Math.min(1, Math.max(0, audioLevel / 100))} state={isTranslating ? 'translating' : isRecording ? 'listening' : 'idle'} />
         {/* Conversation Mode Toggle */}
         <div className="mb-6 flex justify-center">
           <div className="glass-panel rounded-2xl p-4 flex flex-col gap-4">
@@ -366,86 +381,26 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Language Selector - Hide in conversation mode */}
-        {!conversationMode && (
-          <div className="mb-8">
-            <LanguageSelector
-              sourceLanguage={sourceLanguage}
-              targetLanguage={targetLanguage}
-              onSourceChange={setSourceLanguage}
-              onTargetChange={setTargetLanguage}
-              onSwap={swapLanguages}
-            />
-          </div>
-        )}
+        {/* Language card matching inspiration */}
+        <LanguageCard
+          source={sourceLanguage}
+          target={targetLanguage}
+          onSourceChange={(l) => setSourceLanguage(l)}
+          onTargetChange={(l) => setTargetLanguage(l)}
+          onSwap={swapLanguages}
+        />
 
-        {/* Unified language + input composer */}
-        <div className="mb-8">
-          <div className="glass-panel rounded-2xl p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-white/60">From</label>
-                <select
-                  value={sourceLanguage}
-                  onChange={(e) => setSourceLanguage(e.target.value as 'en' | 'es')}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/90 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={swapLanguages}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/80 transition-colors hover:bg-white/10"
-                aria-label="Swap languages"
-              >
-                <ArrowLeftRight className="h-4 w-4" />
-              </button>
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-white/60">To</label>
-                <select
-                  value={targetLanguage}
-                  onChange={(e) => setTargetLanguage(e.target.value as 'en' | 'es')}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-white/90 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
-                >
-                  <option value="es">Spanish</option>
-                  <option value="en">English</option>
-                </select>
-              </div>
-              <div className="ml-auto text-xs text-white/50">{textInput.length}/1000</div>
-            </div>
-            <div className="mt-3 flex items-end gap-2">
-              <textarea
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value.slice(0, 1000))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleTextTranslate();
-                  }
-                }}
-                rows={2}
-                maxLength={1000}
-                placeholder={`Type in ${sourceLanguage === 'en' ? 'English' : 'Spanish'}… (Press Enter to send)`}
-                className="flex-1 resize-none rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white/90 placeholder:text-white/40 outline-none backdrop-blur focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={handleTextTranslate}
-                disabled={!textInput.trim() || isTextTranslating}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-pink-500 px-4 text-sm font-medium text-white shadow transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isTextTranslating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                Send
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Input pill with actions */}
+        <InputPill
+          value={textInput}
+          onChange={(v) => setTextInput(v.slice(0, 1000))}
+          onSubmit={handleTextTranslate}
+          onMic={handleRecordingToggle}
+          onCamera={() => toast.info('Camera coming soon')}
+          onGallery={() => toast.info('Gallery coming soon')}
+          loading={isTextTranslating}
+        />
+        <TipChips />
 
         {/* Conversation Display */}
         <div className="mb-8">
@@ -460,7 +415,7 @@ export default function Home() {
         </div>
 
         {/* Recording Controls */}
-        <div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-6 pb-24">
           {conversationMode && autoRecord ? (
             // Conversation mode with start/stop buttons
             <div className="flex gap-4">
@@ -632,6 +587,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <FloatingMic recording={isRecording} translating={isTranslating || isTextTranslating} onToggle={handleRecordingToggle} />
     </main>
   );
 }
