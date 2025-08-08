@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 const ListeningOrb = dynamic(() => import('./ListeningOrb').then(m => m.ListeningOrb), { ssr: false });
 import { LanguageSelector } from './LanguageSelector';
@@ -16,6 +16,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ArrowLeft, User, Mic, Camera, Keyboard, HelpCircle } from 'lucide-react';
 import { motion, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { useRealtimeTranslation } from '@/hooks/useRealtimeTranslation';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { ConnectionStatus } from '@/components/ConnectionStatus';
 
 type Page = 'main' | 'signin' | 'signup' | 'settings';
 
@@ -52,6 +55,79 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [translationData, setTranslationData] = useState<TranslationData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Map UI language names to API codes (currently only en/es fully supported by realtime API)
+  const toLangCode = (name: string): 'en' | 'es' => {
+    const lowered = name.toLowerCase();
+    if (lowered.startsWith('spanish') || lowered === 'es') return 'es';
+    return 'en';
+  };
+
+  // Keep current language names and codes in refs to avoid effect churn
+  const fromLangNameRef = useRef(fromLanguage);
+  const toLangNameRef = useRef(toLanguage);
+  const fromLangCodeRef = useRef<'en' | 'es'>(toLangCode(fromLanguage));
+  const toLangCodeRef = useRef<'en' | 'es'>(toLangCode(toLanguage));
+
+  // Realtime translation hook
+  const {
+    connectionStatus,
+    currentTranscription,
+    isProcessing: rtProcessing,
+    connect,
+    sendAudioData,
+    updateLanguages,
+    clearTranscription,
+  } = useRealtimeTranslation({
+    onTranscriptionUpdate: (text) => {
+      setTranslationData((prev) => ({
+        originalText: text,
+        translatedText: prev?.translatedText || '',
+        fromLanguage,
+        toLanguage,
+        inputType: 'voice',
+        isProcessing: true,
+        confidence: prev?.confidence,
+      }));
+    },
+    onTranslationComplete: (result) => {
+      setTranslationData({
+        originalText: currentTranscription || translationData?.originalText || '',
+        translatedText: result.text,
+        fromLanguage,
+        toLanguage,
+        inputType: 'voice',
+        isProcessing: false,
+        confidence: result.confidence ?? 0.9,
+      });
+    },
+    onError: () => {
+      setIsProcessing(false);
+    },
+  });
+
+  // Initialize recorder for push-to-talk style capture
+  const { startRecording, stopRecording } = useAudioRecorder({
+    onRecordingComplete: async (blob) => {
+      try {
+        setIsProcessing(true);
+        setTranslationData({
+          originalText: currentTranscription || '',
+          translatedText: '',
+          fromLanguage,
+          toLanguage,
+          inputType: 'voice',
+          isProcessing: true,
+        });
+        const arrayBuffer = await blob.arrayBuffer();
+        await sendAudioData(arrayBuffer, 'auto');
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    sampleRate: 24000,
+    chunkSize: 4096,
+  });
 
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 };
   const x = useSpring(0, springConfig);
@@ -150,22 +226,37 @@ export default function App() {
     }, 2000 + Math.random() * 1000);
   };
 
-  // Handle voice translation when listening stops
+  // Update backend language preferences when user changes selection
   useEffect(() => {
-    if (!isListening && !translationData && !isProcessing && user) {
-      // Mock voice input
-      const mockInputs = [
-        'Hello, how are you?',
-        'Good morning',
-        'Thank you very much',
-        'Where is the nearest restaurant?',
-        'Can you help me please?'
-      ];
-      
-      const randomInput = mockInputs[Math.floor(Math.random() * mockInputs.length)];
-      simulateTranslation(randomInput, 'voice');
-    }
-  }, [isListening, translationData, isProcessing, user, fromLanguage, toLanguage]);
+    fromLangNameRef.current = fromLanguage;
+    toLangNameRef.current = toLanguage;
+    fromLangCodeRef.current = toLangCode(fromLanguage);
+    toLangCodeRef.current = toLangCode(toLanguage);
+    updateLanguages(fromLangCodeRef.current, toLangCodeRef.current);
+  }, [fromLanguage, toLanguage, updateLanguages]);
+
+  // Start/stop recording when mic toggled
+  useEffect(() => {
+    const run = async () => {
+      if (isListening) {
+        await connect('', fromLangCodeRef.current, toLangCodeRef.current);
+        await startRecording();
+        clearTranscription();
+        setTranslationData({
+          originalText: '',
+          translatedText: '',
+          fromLanguage: fromLangNameRef.current,
+          toLanguage: toLangNameRef.current,
+          inputType: 'voice',
+          isProcessing: true,
+        });
+      } else {
+        // Stopping triggers onRecordingComplete which calls sendAudioData
+        await stopRecording();
+      }
+    };
+    void run();
+  }, [isListening, connect, startRecording, stopRecording, clearTranscription]);
 
   // Reset mouse tracking when page changes
   useEffect(() => {
@@ -175,9 +266,48 @@ export default function App() {
     }
   }, [currentPage, x, y]);
 
-  const handleTextTranslation = (text: string) => {
-    if (text.trim()) {
-      simulateTranslation(text, 'text');
+  const handleTextTranslation = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    try {
+      setIsProcessing(true);
+      setTranslationData({
+        originalText: trimmed,
+        translatedText: '',
+        fromLanguage,
+        toLanguage,
+        inputType: 'text',
+        isProcessing: true,
+      });
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: trimmed,
+          sourceLanguage: toLangCode(fromLanguage),
+          targetLanguage: toLangCode(toLanguage),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Translation failed');
+      setTranslationData({
+        originalText: trimmed,
+        translatedText: json.data.text,
+        fromLanguage,
+        toLanguage,
+        inputType: 'text',
+        isProcessing: false,
+        confidence: json.data.confidence,
+      });
+      if (json.data.audioUrl) {
+        const audio = new Audio(json.data.audioUrl as string);
+        void audio.play();
+      }
+    } catch (e) {
+      console.error(e);
+      setTranslationData((prev) => prev ? { ...prev, isProcessing: false } : prev);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -371,14 +501,15 @@ export default function App() {
             stiffness: 80
           }}
         >
-          <AudioControls 
-            isListening={isListening} 
+          <AudioControls
+            isListening={isListening}
             setIsListening={(listening) => {
               setIsListening(listening);
               if (listening) {
                 handleClearTranslation();
+                clearTranscription();
               }
-            }} 
+            }}
           />
         </motion.div>
       </div>
@@ -482,9 +613,12 @@ export default function App() {
 
   return (
     <AnimatedBackground 
-      isListening={isListening || isProcessing} 
+      isListening={isListening || isProcessing || rtProcessing} 
       variant={getBackgroundVariant()}
     >
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+        <ConnectionStatus status={connectionStatus} />
+      </div>
       {renderCurrentPage()}
     </AnimatedBackground>
   );
