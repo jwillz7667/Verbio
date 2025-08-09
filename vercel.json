@@ -5,7 +5,11 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": ["iad1"],
-  "functions": {},
+  "functions": {
+    "placeholder": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
