@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Button } from './ui/button';
+import { Button } from '@/components/voice-app/ui/button';
 import { Mic, MicOff } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import { gsap } from 'gsap';

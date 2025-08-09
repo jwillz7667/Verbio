@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
+import { Button } from '@/components/voice-app/ui/button';
+import { Input } from '@/components/voice-app/ui/input';
+import { Label } from '@/components/voice-app/ui/label';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, Github, Chrome } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

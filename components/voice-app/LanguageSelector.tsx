@@ -1,6 +1,6 @@
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/voice-app/ui/select';
+import { Button } from '@/components/voice-app/ui/button';
 import { ArrowLeftRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LANGUAGES } from '@/lib/i18n/languages';

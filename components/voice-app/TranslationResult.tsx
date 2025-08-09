@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Card } from './ui/card';
+import { Button } from '@/components/voice-app/ui/button';
+import { Badge } from '@/components/voice-app/ui/badge';
+import { Card } from '@/components/voice-app/ui/card';
 import { Copy, Volume2, Star, RotateCcw, Languages, Mic, Type } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

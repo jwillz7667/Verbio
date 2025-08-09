@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Switch } from './ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Button } from '@/components/voice-app/ui/button';
+import { Input } from '@/components/voice-app/ui/input';
+import { Label } from '@/components/voice-app/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/voice-app/ui/card';
+import { Switch } from '@/components/voice-app/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/voice-app/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/voice-app/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/voice-app/ui/tabs';
 import { TranslationHistory } from './TranslationHistory';
 import { 
   ArrowLeft, 

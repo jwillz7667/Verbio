@@ -12,8 +12,8 @@ import { AnimatedBackground } from './AnimatedBackground';
 import { SignIn } from './SignIn';
 import { SignUp } from './SignUp';
 import { AccountSettings } from './AccountSettings';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
+import { Button } from '@/components/voice-app/ui/button';
+import { Input } from '@/components/voice-app/ui/input';
 import { ArrowLeft, User, Mic, Camera, Keyboard, HelpCircle } from 'lucide-react';
 import { motion, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { toLangCode } from '@/lib/i18n/languages';
@@ -215,7 +215,7 @@ export default function App() {
       }
     };
     void run();
-  }, [isListening, connectRtc, disconnectRtc]);
+  }, [isListening, connectRtc, disconnectRtc, remoteAudioRef]);
 
   // Reset mouse tracking when page changes
   useEffect(() => {

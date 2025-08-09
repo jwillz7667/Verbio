@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Card, CardContent, CardHeader } from './ui/card';
+import { Button } from '@/components/voice-app/ui/button';
+import { Input } from '@/components/voice-app/ui/input';
+import { Badge } from '@/components/voice-app/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/voice-app/ui/card';
 import { Search, Clock, Languages, Star, Trash2, Copy, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

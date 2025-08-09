@@ -10,7 +10,7 @@ export const DURATIONS = {
 };
 
 export const REPEAT = {
-  infinite: Infinity as const,
+  infinite: Infinity,
 };
 
 
