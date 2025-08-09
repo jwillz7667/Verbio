@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server';
 
+// Ensure sufficient execution window without relying on vercel.json functions config
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.OPENAI_API_KEY;
   

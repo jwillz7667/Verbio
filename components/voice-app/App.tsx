@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
-const ListeningOrb = dynamic(() => import('./ListeningOrb').then(m => m.ListeningOrb), { ssr: false });
+import { ListeningOrb3D as ListeningOrb } from '@/components/visual';
 import { LanguageSelector } from './LanguageSelector';
 import { AudioControls } from './AudioControls';
 import { TipsPopup } from './TipsPopup';
