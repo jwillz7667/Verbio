@@ -55,6 +55,8 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [translationData, setTranslationData] = useState<TranslationData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [textInput, setTextInput] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   // Keep current language names and codes in refs to avoid effect churn
   const fromLangNameRef = useRef(fromLanguage);
@@ -178,6 +180,11 @@ export default function App() {
     }, 2000 + Math.random() * 1000);
   };
 
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Update backend language preferences when user changes selection
   useEffect(() => {
     fromLangNameRef.current = fromLanguage;
@@ -191,7 +198,7 @@ export default function App() {
     const run = async () => {
       if (isListening) {
         partialRef.current = '';
-        await connectRtc();
+        await connectRtc({ sourceLanguage: fromLangCodeRef.current, targetLanguage: toLangCodeRef.current });
         // Ensure remote audio element is attached to DOM for autoplay policies
         try {
           if (remoteAudioRef.current) {
@@ -482,16 +489,18 @@ export default function App() {
         >
           <Input 
             placeholder="Type to translate instead..."
-            className="w-full bg-white/20 backdrop-blur-md border-white/30 text-white placeholder:text-white/70 rounded-2xl py-5 px-5 pr-16 transition-all duration-300 focus:bg-white/25 focus:border-white/50"
+            className="w-full bg-white/20 backdrop-blur-md border-white/30 text-white placeholder:text-white/70 rounded-2xl py-5 px-5 pr-28 transition-all duration-300 focus:bg-white/25 focus:border-white/50"
             disabled={isListening || isProcessing}
+            value={textInput}
+            onChange={(e) => setTextInput(e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.currentTarget.value.trim() && !isProcessing) {
-                handleTextTranslation(e.currentTarget.value);
-                e.currentTarget.value = '';
+              if (e.key === 'Enter' && textInput.trim() && !isProcessing) {
+                void handleTextTranslation(textInput);
+                setTextInput('');
               }
             }}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex space-x-2">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-2">
             {[Mic, Camera, Keyboard].map((Icon, index) => (
               <motion.div
                 key={index}
@@ -508,6 +517,14 @@ export default function App() {
                 </Button>
               </motion.div>
             ))}
+            <Button
+              aria-label="Translate text"
+              className="h-8 px-3 bg-white/30 hover:bg-white/40 text-white rounded-full border border-white/40"
+              disabled={isListening || isProcessing || !textInput.trim()}
+              onClick={() => { void handleTextTranslation(textInput); setTextInput(''); }}
+            >
+              Translate
+            </Button>
           </div>
         </motion.div>
       </motion.div>

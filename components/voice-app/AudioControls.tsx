@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { Button } from '@/components/voice-app/ui/button';
-import { Mic, MicOff } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { gsap } from 'gsap';
+"use client";
+
+import React, { useCallback, useRef, useState } from 'react';
+import { Mic, MicOff, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AudioControlsProps {
   isListening: boolean;
@@ -10,280 +10,175 @@ interface AudioControlsProps {
 }
 
 export function AudioControls({ isListening, setIsListening }: AudioControlsProps) {
-  const visualizerRef = useRef<HTMLDivElement>(null);
-  const micButtonContainerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   
-  const scale = useMotionValue(1);
-  const rotateZ = useMotionValue(0);
-  const springConfig = { stiffness: 300, damping: 30 };
-  const scaleSpring = useSpring(scale, springConfig);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (micButtonContainerRef.current) {
-        if (isListening) {
-          // Enhanced mic button pulsing with GSAP
-          gsap.to(micButtonContainerRef.current, {
-            boxShadow: "0 0 50px rgba(239, 68, 68, 0.8), 0 0 100px rgba(239, 68, 68, 0.4)",
-            duration: 1,
-            repeat: -1,
-            yoyo: true,
-            ease: "power2.inOut"
-          });
-
-          // Create dynamic audio bars
-          if (visualizerRef.current?.children) {
-            const bars = visualizerRef.current.children;
-            Array.from(bars).forEach((bar, i) => {
-              gsap.to(bar, {
-                height: `random(10, 60)`,
-                duration: `random(0.3, 0.8)`,
-                repeat: -1,
-                yoyo: true,
-                ease: "power2.inOut",
-                delay: i * 0.05
-              });
-            });
-          }
-        } else {
-          gsap.to(micButtonContainerRef.current, {
-            boxShadow: "0 0 20px rgba(147, 51, 234, 0.3)",
-            duration: 0.5,
-            ease: "power2.out"
-          });
-        }
-      }
-    }, micButtonContainerRef);
-
-    return () => ctx.revert();
-  }, [isListening]);
-
-  const handleMicClick = () => {
-    // Enhanced click animation
-    scale.set(0.85);
-    rotateZ.set(isListening ? -15 : 15);
-    
-    setTimeout(() => {
-      scale.set(1);
-      rotateZ.set(0);
-    }, 150);
-    
+  const requestMicrophonePermission = useCallback(async () => {
     try {
-      // Resume any suspended audio context to satisfy autoplay policies
-      if (typeof window !== 'undefined') {
-        const AC = (window.AudioContext || (window as any).webkitAudioContext);
-        if (AC) {
-          const ctx = new AC();
-          if (ctx.state === 'suspended') {
-            void ctx.resume();
-          }
-          // Immediately close to avoid leaks; we only ping resume
-          void ctx.close();
-        }
+      setPermissionError(null);
+      
+      // Request microphone permission explicitly
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        } 
+      });
+      
+      // Clean up the stream immediately after getting permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      setHasPermission(true);
+      return true;
+    } catch (error: any) {
+      console.error('Microphone permission error:', error);
+      
+      if (error.name === 'NotAllowedError') {
+        setPermissionError('Microphone access denied. Please enable it in your browser settings.');
+      } else if (error.name === 'NotFoundError') {
+        setPermissionError('No microphone found. Please connect a microphone.');
+      } else {
+        setPermissionError('Failed to access microphone. Please check your settings.');
       }
-    } catch {}
-
+      
+      setHasPermission(false);
+      return false;
+    }
+  }, []);
+  
+  const handleMicClick = useCallback(async () => {
+    // First check if we have permission
+    if (hasPermission === null || hasPermission === false) {
+      const granted = await requestMicrophonePermission();
+      if (!granted) return;
+    }
+    
+    // Toggle listening state
     setIsListening(!isListening);
-  };
+    
+    // Announce state change to screen readers
+    const message = isListening ? 'Stopped listening' : 'Started listening';
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = message;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
+  }, [isListening, setIsListening, hasPermission, requestMicrophonePermission]);
+
+  // Keyboard support
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      handleMicClick();
+    }
+  }, [handleMicClick]);
 
   return (
-    <div className="flex flex-col items-center space-y-6">
-      {/* Enhanced Main Mic Control */}
-      <motion.div
-        style={{ 
-          scale: scaleSpring,
-          rotateZ: useSpring(rotateZ, springConfig)
-        }}
-        whileHover={{ 
-          scale: 1.08,
-          transition: { duration: 0.2 }
-        }}
-      >
-        <div 
-          ref={micButtonContainerRef}
-          className="rounded-full"
+    <div className="flex flex-col items-center gap-4">
+      {/* Permission Error Display */}
+      {permissionError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm"
         >
-          <Button
-            onClick={handleMicClick}
-            size="lg"
-            className={`
-              relative rounded-full w-28 h-28 border-3 transition-all duration-500
-              ${isListening 
-                ? 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-red-300' 
-                : 'bg-gradient-to-br from-white/25 to-white/10 hover:from-white/35 hover:to-white/20 border-white/40'
-              }
-              backdrop-blur-md text-white shadow-2xl
-              before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-50
-            `}
-          >
-            <AnimatePresence mode="wait">
-              {isListening ? (
-                <motion.div
-                  key="listening"
-                  initial={{ scale: 0, rotate: 180, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  exit={{ scale: 0, rotate: -180, opacity: 0 }}
-                  transition={{ 
-                    duration: 0.4,
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 20
-                  }}
-                >
-                  <MicOff className="h-12 w-12 drop-shadow-lg" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="idle"
-                  initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  exit={{ scale: 0, rotate: 180, opacity: 0 }}
-                  transition={{ 
-                    duration: 0.4,
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 20
-                  }}
-                >
-                  <Mic className="h-12 w-12 drop-shadow-lg" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Enhanced Pulse Effects */}
-            <AnimatePresence>
-              {isListening && (
-                <>
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute inset-0 rounded-full bg-gradient-to-br from-red-400/40 to-red-600/20"
-                      initial={{ scale: 1, opacity: 0.6 }}
-                      animate={{ 
-                        scale: [1, 2 + i * 0.3, 3 + i * 0.5], 
-                        opacity: [0.6, 0.2, 0] 
-                      }}
-                      exit={{ scale: 1, opacity: 0 }}
-                      transition={{ 
-                        duration: 1.5 + i * 0.2, 
-                        repeat: Infinity, 
-                        ease: "easeOut",
-                        delay: i * 0.3
-                      }}
-                    />
-                  ))}
-                </>
-              )}
-            </AnimatePresence>
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Enhanced Status Text */}
-      <AnimatePresence mode="wait">
-        <motion.div 
-          className="text-center"
-          key={isListening ? 'listening' : 'idle'}
-          initial={{ opacity: 0, y: 15, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.9 }}
-          transition={{ 
-            duration: 0.4,
-            type: "spring",
-            stiffness: 150
-          }}
-        >
-          <motion.p 
-            className="text-white/90 font-medium text-lg"
-            animate={{
-              textShadow: isListening 
-                ? ["0 0 10px rgba(239, 68, 68, 0.5)", "0 0 20px rgba(239, 68, 68, 0.8)", "0 0 10px rgba(239, 68, 68, 0.5)"]
-                : "0 0 5px rgba(255, 255, 255, 0.3)"
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: isListening ? Infinity : 0,
-              ease: "easeInOut"
-            }}
-          >
-            {isListening ? 'Listening... Tap to stop' : 'Tap to start speaking'}
-          </motion.p>
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{permissionError}</span>
         </motion.div>
-      </AnimatePresence>
-
-      {/* Enhanced Audio Visualization */}
-      <AnimatePresence>
-        {isListening && (
-          <motion.div
-            ref={visualizerRef}
-            className="flex justify-center items-end space-x-1.5 h-20"
-            initial={{ opacity: 0, y: 30, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.8 }}
-            transition={{ 
-              duration: 0.5,
-              type: "spring",
-              stiffness: 120
-            }}
-          >
-            {Array.from({ length: 20 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className={`
-                  w-2 rounded-full bg-gradient-to-t 
-                  ${i % 3 === 0 ? 'from-purple-400 to-pink-400' : 
-                    i % 3 === 1 ? 'from-pink-400 to-red-400' : 
-                    'from-blue-400 to-purple-400'}
-                  shadow-lg
-                `}
-                initial={{ height: 4 }}
-                animate={{
-                  height: [4, Math.random() * 50 + 20, 4],
-                  opacity: [0.6, 1, 0.6],
-                  boxShadow: [
-                    "0 0 5px rgba(147, 51, 234, 0.3)",
-                    "0 0 15px rgba(147, 51, 234, 0.8)",
-                    "0 0 5px rgba(147, 51, 234, 0.3)"
-                  ]
-                }}
-                transition={{
-                  duration: 0.4 + Math.random() * 0.6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.05
-                }}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Sound Waves */}
-      {isListening && (
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
+      )}
+      
+      {/* Main Mic Button with proper touch target size (min 44x44px) */}
+      <motion.button
+        ref={buttonRef}
+        onClick={handleMicClick}
+        onKeyDown={handleKeyDown}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className={`
+          relative min-w-[88px] min-h-[88px] rounded-full border-2 
+          transition-all duration-300 focus:outline-none focus:ring-4
+          ${isListening 
+            ? 'bg-red-500 hover:bg-red-600 border-red-300 focus:ring-red-300' 
+            : 'bg-blue-500 hover:bg-blue-600 border-blue-300 focus:ring-blue-300'
+          }
+          text-white shadow-lg flex items-center justify-center
+          ${hasPermission === false ? 'opacity-75' : ''}
+        `}
+        aria-label={isListening ? 'Stop recording' : 'Start recording'}
+        aria-pressed={isListening}
+        type="button"
+      >
+        <AnimatePresence mode="wait">
+          {isListening ? (
             <motion.div
+              key="listening"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MicOff className="h-10 w-10" aria-hidden="true" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="idle"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Mic className="h-10 w-10" aria-hidden="true" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* CSS-only pulse effect for better performance */}
+        {isListening && (
+          <div className="absolute inset-0 rounded-full">
+            <div className="absolute inset-0 rounded-full bg-red-400 animate-ping" />
+            <div className="absolute inset-0 rounded-full bg-red-400 animate-ping animation-delay-200" />
+          </div>
+        )}
+      </motion.button>
+
+      {/* Status Text */}
+      <p className="text-gray-700 dark:text-gray-300 font-medium text-base text-center">
+        {isListening ? 'Listening... Tap to stop' : 
+         hasPermission === false ? 'Grant microphone access to start' :
+         'Tap to start speaking'}
+      </p>
+
+      {/* CSS-only audio visualization for better performance */}
+      {isListening && (
+        <div className="flex gap-1 h-12 items-end" aria-hidden="true">
+          {[...Array(5)].map((_, i) => (
+            <div
               key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-60"
+              className="w-2 bg-gradient-to-t from-blue-500 to-blue-300 rounded-full"
               style={{
-                left: `${30 + Math.random() * 40}%`,
-                top: `${30 + Math.random() * 40}%`,
-              }}
-              animate={{
-                x: [0, Math.random() * 120 - 60],
-                y: [0, Math.random() * 120 - 60],
-                scale: [0, 2, 0],
-                opacity: [0, 0.8, 0],
-              }}
-              transition={{
-                duration: 2 + Math.random() * 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.4
+                animation: `audioBar ${0.6 + i * 0.1}s ease-in-out infinite`,
+                animationDelay: `${i * 0.1}s`,
+                height: '20px'
               }}
             />
           ))}
         </div>
+      )}
+      
+      {/* Request Permission Button if needed */}
+      {hasPermission === false && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={requestMicrophonePermission}
+          className="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Grant Microphone Access
+        </motion.button>
       )}
     </div>
   );

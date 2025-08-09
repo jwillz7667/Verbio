@@ -14,26 +14,21 @@ Verbio is a real-time voice translation platform built with Next.js 14 (App Rout
 - `npm start` - Start production server
 - `npm run type-check` - Run TypeScript type checking without emitting files
 
-### Code Quality
+### Code Quality (ALWAYS run before completing a task)
 - `npm run lint` - Run Next.js linter and ESLint on .ts/.tsx files
 - `npm run lint:fix` - Auto-fix linting issues
 - `npm run format` - Format all code with Prettier
 
 ### Testing
-- `npm test` - Run Jest tests with coverage
+- `npm test` - Run Jest tests with coverage (70% threshold)
 - `npm run test:watch` - Run Jest in watch mode
-- `npm run test:unit` - Run unit tests
 - `npm run test:e2e` - Run Playwright end-to-end tests
 - `npm run test:e2e:ui` - Run Playwright tests with UI mode
 
-### Database (Prisma)
-- `npm run db:push` - Push schema changes to database
-- `npm run db:migrate` - Create and apply migrations
-- `npm run db:seed` - Seed database with initial data
-
-### Analysis & Deployment
+### Other Commands
 - `npm run analyze` - Analyze bundle size
-- `npm run vercel:build` - Build for Vercel deployment (generates Prisma client + Next.js build)
+- `npm run lighthouse` - Run Lighthouse CI performance tests
+- `npm run ci` - Full CI pipeline (type-check, lint, build, test, e2e, lighthouse)
 
 ## Architecture
 
@@ -84,22 +79,26 @@ Verbio is a real-time voice translation platform built with Next.js 14 (App Rout
 The project uses TypeScript path aliases defined in `tsconfig.json`:
 - `@/*` → `./app/*`
 - `@/components/*` → `./components/*`
+- `@/features/*` → `./features/*` (translation hooks and libs)
 - `@/hooks/*` → `./hooks/*`
 - `@/lib/*` → `./lib/*`
+- `@/store/*` → `./store/*`
 - `@/utils/*` → `./utils/*`
 - `@/types/*` → `./types/*`
+- `@/styles/*` → `./styles/*`
+- `@/public/*` → `./public/*`
 
 ## Environment Configuration
 
-Required environment variables (create `.env.local` from `.env.local.example`):
-- `OPENAI_API_KEY` - OpenAI API key with Realtime API access (server-side)
-- `NEXT_PUBLIC_OPENAI_API_KEY` - If client-side access needed (not recommended)
+Required environment variables:
+- `OPENAI_API_KEY` - OpenAI API key with Realtime API access (server-side only)
 
-Production environment variables (set in Vercel):
-- `DATABASE_URL` - PostgreSQL connection string
-- `KV_URL` - Vercel KV Redis URL
+Optional environment variables (for production features):
+- `DATABASE_URL` - PostgreSQL connection string (Prisma database)
+- `KV_URL` - Vercel KV Redis URL (session storage)
 - `NEXTAUTH_SECRET` - Random secret for authentication
 - `SENTRY_DSN` - Sentry error tracking
+- `NEXT_PUBLIC_OPENAI_API_KEY` - Client-side API key (not recommended)
 
 ## Important Technical Details
 
@@ -138,14 +137,27 @@ Response handling:
 ## Testing Strategy
 
 - Unit tests with Jest and React Testing Library
-- E2E tests with Playwright
+- E2E tests with Playwright (Chrome, Firefox, Safari, Mobile)
 - Test files follow `*.test.ts` or `*.test.tsx` pattern
-- Coverage reports generated with `npm test`
+- Coverage threshold: 70% for branches, functions, lines, statements
+- Test paths mapped to TypeScript aliases
 
-## Security Considerations
+## Security & Deployment
 
 - API keys stored server-side only, never exposed to client
-- HTTPS/WSS encryption for all connections
+- HTTPS/WSS encryption enforced via headers
 - Rate limiting configured with `rate-limiter-flexible`
-- Content Security Policy headers
-- CORS protection on API routes
+- CSP headers for XSS protection
+- CORS configured per environment (production: verbio.app only)
+- Deployed on Vercel with automatic CI/CD from main branch
+- API route timeouts: 60s for `/api/realtime`, 30s for `/api/translate`
+
+## Database Schema (Prisma)
+
+Main entities:
+- `Profile` - User profiles with authentication
+- `TranslationSession` - Translation sessions with language pairs
+- `Message` - Individual messages with text, audio, and metadata
+- `AuditLog` - Activity tracking
+
+Run `npx prisma studio` to view/edit database locally.

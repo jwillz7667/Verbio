@@ -120,17 +120,18 @@
 .orb-glow-bg { background: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.6), hsl(var(--accent) / 0.35)); }
 
 
-/* Brand Glass */
+/* Brand Glass - WCAG AA compliant contrast */
 .glass-panel {
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  background: rgba(255, 255, 255, 0.92); /* Increased opacity for better contrast */
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 .dark .glass-panel {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 20, 20, 0.85); /* Higher opacity for WCAG AA compliance */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Floating microinteractions */
@@ -147,6 +148,40 @@
   0% { transform: scale(0.9); opacity: 0.8; }
   70% { transform: scale(1.15); opacity: 0; }
   100% { transform: scale(1.15); opacity: 0; }
+}
+
+/* Audio visualization bars - CSS-only for performance */
+@keyframes audioBar {
+  0%, 100% { 
+    transform: scaleY(0.3);
+  }
+  50% { 
+    transform: scaleY(1);
+  }
+}
+
+/* Animation delays for staggered effect */
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+/* Prevent animation freezing with will-change */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-ping {
+    will-change: transform, opacity;
+  }
+  [class*="animate-"] {
+    animation-play-state: running;
+  }
 }
 
 .neu-flat {
