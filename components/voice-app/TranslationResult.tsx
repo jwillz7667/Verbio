@@ -93,7 +93,7 @@ export function TranslationResult({
         {showProcessing && (
           <motion.div
             key="processing"
-            className="w-full max-w-lg mx-auto mb-6"
+            className="w-full mx-auto mb-4 sm:mb-6"
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -104,7 +104,7 @@ export function TranslationResult({
               damping: 20 
             }}
           >
-            <Card className="bg-white/20 backdrop-blur-md border-white/30 p-6 rounded-3xl">
+            <Card className="bg-white/20 backdrop-blur-md border-white/30 p-4 sm:p-6 rounded-2xl">
               <div className="flex items-center justify-center space-x-3 mb-4">
                 <motion.div
                   className="w-2.5 h-2.5 bg-purple-400 rounded-full"
@@ -158,7 +158,7 @@ export function TranslationResult({
         {!showProcessing && (
           <motion.div
             key="result"
-            className="w-full max-w-lg mx-auto mb-6"
+            className="w-full mx-auto mb-4 sm:mb-6"
             initial={{ opacity: 0, y: 40, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -30, scale: 0.9 }}
@@ -169,10 +169,10 @@ export function TranslationResult({
               damping: 20 
             }}
           >
-            <Card className="bg-white/20 backdrop-blur-xl border-white/30 overflow-hidden shadow-2xl rounded-3xl">
+            <Card className="bg-white/20 backdrop-blur-xl border-white/30 overflow-hidden shadow-xl rounded-2xl">
               {/* Header with Action Buttons */}
               <motion.div 
-                className="flex items-center justify-between p-4 border-b border-white/20"
+                className="flex items-center justify-between p-3 sm:p-4 border-b border-white/20"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
@@ -218,7 +218,7 @@ export function TranslationResult({
 
               {/* Original Text Pill */}
               <motion.div 
-                className="p-5 space-y-4"
+                className="p-4 sm:p-5 space-y-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}

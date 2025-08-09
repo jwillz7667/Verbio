@@ -125,7 +125,7 @@ export function useRealtimeVoiceRealtime(options: UseRealtimeVoiceRealtimeOption
     }
   }, [disconnect, isConnected, isConnecting, options]);
 
-  return { connect, disconnect, isConnected, isConnecting };
+  return { connect, disconnect, isConnected, isConnecting, remoteAudioRef };
 }
 
 

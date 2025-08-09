@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button';
 import { ArrowLeftRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { LANGUAGES } from '@/lib/i18n/languages';
 
 interface LanguageSelectorProps {
   fromLanguage: string;
@@ -11,18 +12,7 @@ interface LanguageSelectorProps {
   onToLanguageChange: (language: string) => void;
 }
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
-  { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-];
+const languages = LANGUAGES;
 
 export function LanguageSelector({
   fromLanguage,
@@ -40,16 +30,16 @@ export function LanguageSelector({
 
   return (
     <motion.div 
-      className="bg-white/25 backdrop-blur-xl rounded-3xl p-6 border border-white/40 shadow-2xl"
+      className="bg-white/25 backdrop-blur-xl rounded-2xl p-4 sm:p-6 border border-white/40 shadow-xl"
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3 sm:gap-4">
         {/* From Language */}
         <div className="flex-1 min-w-0">
           <label className="block text-white/80 text-sm mb-2 font-medium">From</label>
           <Select value={fromLanguage} onValueChange={onFromLanguageChange}>
-            <SelectTrigger className="bg-transparent border-none text-white hover:bg-white/10 focus:bg-white/15 h-12 rounded-2xl w-full">
+            <SelectTrigger className="bg-transparent border-none text-white hover:bg-white/10 focus:bg-white/15 h-12 rounded-xl w-full">
               <SelectValue>
                 <div className="flex items-center space-x-2 min-w-0">
                   <span className="text-xl flex-shrink-0">{fromLang?.flag}</span>
@@ -57,7 +47,7 @@ export function LanguageSelector({
                 </div>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-white/95 backdrop-blur-md border-white/30 rounded-2xl">
+            <SelectContent className="bg-white/95 backdrop-blur-md border-white/30 rounded-xl max-h-60 overflow-auto">
               {languages.map((language) => (
                 <SelectItem 
                   key={language.code} 
@@ -95,7 +85,7 @@ export function LanguageSelector({
         <div className="flex-1 min-w-0">
           <label className="block text-white/80 text-sm mb-2 font-medium">To</label>
           <Select value={toLanguage} onValueChange={onToLanguageChange}>
-            <SelectTrigger className="bg-transparent border-none text-white hover:bg-white/10 focus:bg-white/15 h-12 rounded-2xl w-full">
+            <SelectTrigger className="bg-transparent border-none text-white hover:bg-white/10 focus:bg-white/15 h-12 rounded-xl w-full">
               <SelectValue>
                 <div className="flex items-center space-x-2 min-w-0">
                   <span className="text-xl flex-shrink-0">{toLang?.flag}</span>
@@ -103,7 +93,7 @@ export function LanguageSelector({
                 </div>
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-white/95 backdrop-blur-md border-white/30 rounded-2xl">
+            <SelectContent className="bg-white/95 backdrop-blur-md border-white/30 rounded-xl max-h-60 overflow-auto">
               {languages.map((language) => (
                 <SelectItem 
                   key={language.code} 

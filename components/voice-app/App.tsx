@@ -16,6 +16,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ArrowLeft, User, Mic, Camera, Keyboard, HelpCircle } from 'lucide-react';
 import { motion, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { toLangCode } from '@/lib/i18n/languages';
+import { translateTextClient } from '@/lib/api/translate';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { useRealtimeVoiceRealtime } from '@/hooks/useRealtimeVoiceRealtime';
 
@@ -55,13 +57,6 @@ export default function App() {
   const [translationData, setTranslationData] = useState<TranslationData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Map UI language names to API codes (currently only en/es fully supported by realtime API)
-  const toLangCode = (name: string): 'en' | 'es' => {
-    const lowered = name.toLowerCase();
-    if (lowered.startsWith('spanish') || lowered === 'es') return 'es';
-    return 'en';
-  };
-
   // Keep current language names and codes in refs to avoid effect churn
   const fromLangNameRef = useRef(fromLanguage);
   const toLangNameRef = useRef(toLanguage);
@@ -70,7 +65,7 @@ export default function App() {
 
   // Accumulate streaming partials (assistant text)
   const partialRef = useRef('');
-  const { connect: connectRtc, disconnect: disconnectRtc, isConnected, isConnecting } = useRealtimeVoiceRealtime({
+  const { connect: connectRtc, disconnect: disconnectRtc, isConnected, isConnecting, remoteAudioRef } = useRealtimeVoiceRealtime({
     onPartialText: (delta) => {
       partialRef.current += delta;
       setTranslationData({
@@ -198,6 +193,14 @@ export default function App() {
       if (isListening) {
         partialRef.current = '';
         await connectRtc();
+        // Ensure remote audio element is attached to DOM for autoplay policies
+        try {
+          if (remoteAudioRef.current) {
+            remoteAudioRef.current.muted = false;
+            // playsInline is supported as an attribute; set via attribute for TS compatibility
+            remoteAudioRef.current.setAttribute('playsinline', 'true');
+          }
+        } catch {}
         setTranslationData({
           originalText: '',
           translatedText: '',
@@ -235,28 +238,18 @@ export default function App() {
         inputType: 'text',
         isProcessing: true,
       });
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: trimmed,
-          sourceLanguage: toLangCode(fromLanguage),
-          targetLanguage: toLangCode(toLanguage),
-        }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error?.message || 'Translation failed');
+      const json = await translateTextClient({ text: trimmed, fromLanguage, toLanguage });
       setTranslationData({
         originalText: trimmed,
-        translatedText: json.data.text,
+        translatedText: json.translatedText,
         fromLanguage,
         toLanguage,
         inputType: 'text',
         isProcessing: false,
-        confidence: json.data.confidence,
+        confidence: json.confidence,
       });
-      if (json.data.audioUrl) {
-        const audio = new Audio(json.data.audioUrl as string);
+      if (json.audioUrl) {
+        const audio = new Audio(json.audioUrl as string);
         void audio.play();
       }
     } catch (e) {
@@ -343,12 +336,12 @@ export default function App() {
       </motion.header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 max-w-screen-sm mx-auto gap-4 sm:gap-8">
         {/* App Logo */}
         <AnimatePresence>
           {!translationData && (
             <motion.div 
-              className="text-center mb-16"
+              className="text-center mb-8 sm:mb-12"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30, scale: 0.9 }}
@@ -388,7 +381,7 @@ export default function App() {
 
         {/* 3D Listening Orb */}
         <motion.div 
-          className={`${translationData ? 'mb-8' : 'mb-16'}`}
+          className={`${translationData ? 'mb-6' : 'mb-10'} w-full flex justify-center`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ 
             opacity: 1, 
@@ -409,7 +402,7 @@ export default function App() {
 
         {/* Language Selector */}
         <motion.div 
-          className={`w-full max-w-md ${translationData ? 'mb-6' : 'mb-12'}`}
+          className={`w-full ${translationData ? 'mb-4' : 'mb-8'}`}
           initial={{ opacity: 0, y: 30 }}
           animate={{ 
             opacity: 1, 
@@ -443,7 +436,7 @@ export default function App() {
 
         {/* Audio Controls */}
         <motion.div 
-          className={`${translationData ? 'mb-4' : 'mb-8'}`}
+          className={`${translationData ? 'mb-3' : 'mb-6'}`}
           initial={{ opacity: 0, y: 30 }}
           animate={{ 
             opacity: 1, 
@@ -469,7 +462,7 @@ export default function App() {
 
       {/* Bottom Input */}
       <motion.div 
-        className="p-6"
+        className="p-4 sm:p-6 w-full max-w-screen-sm mx-auto"
         initial={{ opacity: 0, y: 50 }}
         animate={{ 
           opacity: 1, 
@@ -490,7 +483,7 @@ export default function App() {
         >
           <Input 
             placeholder="Type to translate instead..."
-            className="w-full bg-white/20 backdrop-blur-md border-white/30 text-white placeholder:text-white/70 rounded-3xl py-6 px-6 pr-16 transition-all duration-300 focus:bg-white/25 focus:border-white/50"
+            className="w-full bg-white/20 backdrop-blur-md border-white/30 text-white placeholder:text-white/70 rounded-2xl py-5 px-5 pr-16 transition-all duration-300 focus:bg-white/25 focus:border-white/50"
             disabled={isListening || isProcessing}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.currentTarget.value.trim() && !isProcessing) {
@@ -499,7 +492,7 @@ export default function App() {
               }
             }}
           />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex space-x-2">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex space-x-2">
             {[Mic, Camera, Keyboard].map((Icon, index) => (
               <motion.div
                 key={index}
@@ -569,9 +562,11 @@ export default function App() {
       isListening={isListening || isProcessing || isConnecting} 
       variant={getBackgroundVariant()}
     >
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-50">
         <ConnectionStatus status={isConnecting ? 'connecting' : isConnected ? 'connected' : 'disconnected'} />
       </div>
+      {/* Hidden remote audio tag for WebRTC output */}
+      <audio ref={remoteAudioRef as any} className="hidden" />
       {renderCurrentPage()}
     </AnimatedBackground>
   );

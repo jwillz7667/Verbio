@@ -68,6 +68,21 @@ export function AudioControls({ isListening, setIsListening }: AudioControlsProp
       rotateZ.set(0);
     }, 150);
     
+    try {
+      // Resume any suspended audio context to satisfy autoplay policies
+      if (typeof window !== 'undefined') {
+        const AC = (window.AudioContext || (window as any).webkitAudioContext);
+        if (AC) {
+          const ctx = new AC();
+          if (ctx.state === 'suspended') {
+            void ctx.resume();
+          }
+          // Immediately close to avoid leaks; we only ping resume
+          void ctx.close();
+        }
+      }
+    } catch {}
+
     setIsListening(!isListening);
   };
 
