@@ -15,6 +15,16 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { toast } from 'sonner';
 import { Mic, MicOff, Loader2, Square, Play } from 'lucide-react';
 
+type Conversation = {
+  id: string;
+  type: 'user' | 'assistant';
+  text: string;
+  language: 'en' | 'es';
+  timestamp: Date;
+  audioUrl?: string;
+  voice?: string;
+};
+
 export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [sourceLanguage, setSourceLanguage] = useState<'en' | 'es'>('en');
@@ -28,15 +38,7 @@ export default function Home() {
   const [voicePreference, setVoicePreference] = useState<'auto' | 'male' | 'female'>('auto');
   const [lowLatencyMode, setLowLatencyMode] = useState(false);
   const [lastVoiceUsed, setLastVoiceUsed] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<Array<{
-    id: string;
-    type: 'user' | 'assistant';
-    text: string;
-    language: 'en' | 'es';
-    timestamp: Date;
-    audioUrl?: string;
-    voice?: string;
-  }]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [textInput, setTextInput] = useState<string>("");
   const [isTextTranslating, setIsTextTranslating] = useState<boolean>(false);
 
