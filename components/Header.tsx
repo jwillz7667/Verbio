@@ -13,8 +13,8 @@ export function Header({
   status: "disconnected" | "connecting" | "connected" | "error";
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-transparent">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 rounded-2xl mt-2 backdrop-blur-xl bg-white/60 dark:bg-black/40 border border-black/5 dark:border-white/10 shadow-sm">
+    <header className="sticky top-0 z-40 bg-transparent">
+      <div className="mx-auto mt-3 w-[min(1200px,100%-1rem)] flex h-14 items-center justify-between rounded-2xl border border-black/5 bg-white/60 px-3 shadow-[0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-black/40">
         <Link href="/" className="flex items-center gap-3">
           {/* Light theme logo */}
           <Image
@@ -35,7 +35,7 @@ export function Header({
             priority
           />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ConnectionStatus status={status} />
           <ThemeToggle />
           <UserMenu />

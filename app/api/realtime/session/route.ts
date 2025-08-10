@@ -19,6 +19,7 @@ export async function GET(_req: NextRequest) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
+        'OpenAI-Beta': 'realtime=v1',
       },
       body: JSON.stringify({
         model: REALTIME_CONFIG.model || 'gpt-4o-realtime-preview-2024-12-17',

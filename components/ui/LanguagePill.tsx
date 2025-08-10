@@ -1,16 +1,28 @@
 "use client";
 
+import { cn } from "@/utils/cn";
+
 export function LanguagePill({
   from,
   to,
   onSwap,
+  floating = true,
+  className,
 }: {
   from: string;
   to: string;
   onSwap: () => void;
+  floating?: boolean;
+  className?: string;
 }) {
+  const base =
+    "rounded-full border border-black/5 bg-white/70 px-3 py-1.5 text-sm shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-black/40";
+  const position = floating
+    ? "fixed left-1/2 top-24 -translate-x-1/2 z-30"
+    : "relative z-10";
+
   return (
-    <div className="fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded-full border border-black/5 bg-white/70 px-3 py-1.5 text-sm shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-black/40">
+    <div className={cn(base, position, className)}>
       <span className="font-medium text-black/70 dark:text-white/80">{from}</span>
       <span className="mx-2 text-black/30 dark:text-white/30">→</span>
       <span className="font-medium text-black/70 dark:text-white/80">{to}</span>

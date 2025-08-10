@@ -220,6 +220,12 @@
   66% { transform: translate(-30px, 30px) scale(0.98); }
 }
 
+/* Ensure body grid centering utility for large sections */
+.center-screen {
+  display: grid;
+  place-items: center;
+}
+
 /* Chat bubbles */
 .chat-bubble {
   position: relative;

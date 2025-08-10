@@ -23,7 +23,7 @@ export function Dock() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-4 z-40 mx-auto w-[min(640px,calc(100%-24px))] rounded-2xl border border-black/5 bg-white/70 p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-black/40"
+      className="fixed inset-x-0 bottom-4 z-40 mx-auto w-[min(720px,calc(100%-24px))] rounded-2xl border border-black/5 bg-white/70 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl dark:border-white/10 dark:bg-black/40"
     >
       <ul className="flex items-center justify-around">
         {items.map(({ href, label, icon: Icon }) => {
@@ -39,7 +39,7 @@ export function Dock() {
                     : "text-black/70 hover:bg-black/5 dark:text-white/70 dark:hover:bg-white/10"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${active ? "" : "opacity-80 group-hover:opacity-100"}`} />
+                <Icon className={`h-5 w-5 transition-transform ${active ? "scale-110" : "opacity-80 group-hover:opacity-100 group-hover:scale-110"}`} />
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             </li>
