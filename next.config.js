@@ -25,6 +25,11 @@ const nextConfig = {
     optimizeCss: true,
   },
   
+  generateBuildId: async () => {
+    // Use timestamp or git commit hash for cache busting
+    return Date.now().toString();
+  },
+  
   headers: async () => {
     return [
       // Cache static build assets aggressively and immutably
@@ -34,9 +39,9 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      // Default document responses: no-store to avoid stale HTML
+      // HTML documents: must-revalidate to check for updates
       {
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -44,7 +49,7 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
-          { key: 'Cache-Control', value: 'no-store, max-age=0' },
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
         ],
       },
       // APIs: no-store
