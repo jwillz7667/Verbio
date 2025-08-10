@@ -565,4 +565,3 @@ export default function Home() {
     </main>
   );
 }
->>>>>>> aa76e93 (ui: compact mobile layout, remove listening orb and floating language pill; fix realtime session headers; polish header/dock; bg blobs + CSS utilities)
