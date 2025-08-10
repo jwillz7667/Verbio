@@ -270,6 +270,7 @@ export default function Home() {
           text: trimmed,
           sourceLanguage,
           targetLanguage,
+          voice: voicePreference,
         }),
       });
 
@@ -282,7 +283,7 @@ export default function Home() {
         throw new Error(data?.error?.message || 'Translation failed');
       }
 
-      const translated = data.data;
+      const translated = data.data as { text: string; language: 'en' | 'es'; audioUrl?: string };
       setConversations((prev) => [
         ...prev,
         {
@@ -292,6 +293,7 @@ export default function Home() {
           language: translated.language,
           timestamp: new Date(),
           audioUrl: translated.audioUrl,
+          voice: voicePreference,
         },
       ]);
 
